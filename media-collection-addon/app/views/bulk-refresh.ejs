@@ -1,0 +1,271 @@
+<%
+  /*
+   * views/bulk-refresh.ejs
+   * Massenanalyse: alle Einträge in einer Tabelle, MusicBrainz-Vorschläge
+   * werden parallel geladen (server-seitig rate-limitiert → progressiv).
+   */
+%>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Massenanalyse – MediaDock</title>
+  <link rel="stylesheet" href="<%= base %>/public/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="logo" href="<%= base %>/">
+      <span class="logo-icon">🎵</span>
+      <span class="logo-text">MediaDock</span>
+    </a>
+    <nav>
+      <a href="<%= base %>/">Sammlung</a>
+      <a href="<%= base %>/csv">CSV-Import</a>
+      <a href="<%= base %>/items/bulk-refresh">Massenanalyse</a>
+      <a href="<%= base %>/items/add" class="btn btn-primary">+ Hinzufügen</a>
+    </nav>
+  </header>
+
+  <main class="container container--wide">
+    <div class="bulk-header">
+      <div>
+        <h1 class="page-title" style="margin-bottom:.25rem">Massenanalyse</h1>
+        <p class="page-subtitle">MusicBrainz-Vorschläge für alle Einträge laden und direkt übernehmen.</p>
+      </div>
+      <div class="bulk-header-actions">
+        <span class="bulk-progress" id="progress-label"></span>
+        <button id="btn-start" class="btn btn-primary">🔍 Suche starten</button>
+        <button id="btn-stop"  class="btn btn-ghost"  style="display:none">⏹ Stopp</button>
+      </div>
+    </div>
+
+    <div class="bulk-table-wrap">
+      <table class="bulk-table" id="bulk-table">
+        <thead>
+          <tr>
+            <th class="bt-col-cover"></th>
+            <th class="bt-col-info">Aktueller Eintrag</th>
+            <th class="bt-col-sug">Vorschlag 1</th>
+            <th class="bt-col-sug">Vorschlag 2</th>
+            <th class="bt-col-sug">Vorschlag 3</th>
+            <th class="bt-col-sug">Vorschlag 4</th>
+            <th class="bt-col-sug">Vorschlag 5</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (const item of items) { %>
+            <tr
+              class="bt-row"
+              id="row-<%= item.id %>"
+              data-id="<%= item.id %>"
+              data-title="<%= (item.title  || '').replace(/"/g, '&quot;') %>"
+              data-artist="<%= (item.artist || '').replace(/"/g, '&quot;') %>"
+            >
+              <!-- Cover -->
+              <td class="bt-col-cover">
+                <% if (item.cover_url) { %>
+                  <img
+                    class="bt-cover"
+                    src="<%= item.cover_url %>"
+                    alt=""
+                    loading="lazy"
+                    onerror="this.style.display='none'"
+                  />
+                <% } else { %>
+                  <div class="bt-cover bt-cover--placeholder">🎵</div>
+                <% } %>
+              </td>
+              <!-- Aktueller Eintrag -->
+              <td class="bt-col-info">
+                <a class="bt-item-link" href="<%= base %>/items/<%= item.id %>">
+                  <span class="bt-item-title"><%= item.title %></span>
+                  <% if (item.artist) { %>
+                    <span class="bt-item-artist"><%= item.artist %></span>
+                  <% } %>
+                </a>
+                <span class="bt-item-meta">
+                  <% if (item.year) { %><span class="bt-year"><%= item.year %></span><% } %>
+                  <% if (item.mbid) { %><span class="bt-mbid-dot" title="MBID vorhanden">●</span><% } %>
+                </span>
+                <span class="bt-row-status" id="status-<%= item.id %>"></span>
+              </td>
+              <!-- 5 Vorschlags-Slots -->
+              <% for (let s = 1; s <= 5; s++) { %>
+                <td class="bt-col-sug" id="sug-<%= item.id %>-<%= s %>">
+                  <div class="bt-sug-empty">–</div>
+                </td>
+              <% } %>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <small>MediaDock &mdash; persönliche Mediensammlung</small>
+  </footer>
+
+  <script>
+    const BASE    = '<%= base %>';
+    let stopped   = false;
+    let total     = 0;
+    let done      = 0;
+
+    const btnStart  = document.getElementById('btn-start');
+    const btnStop   = document.getElementById('btn-stop');
+    const progLabel = document.getElementById('progress-label');
+
+    function escHtml(s) {
+      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function setProgress(d, t) {
+      progLabel.textContent = d + ' / ' + t + ' geladen';
+    }
+
+    // Suggestion-Karte als HTML
+    function sugCard(itemId, sug) {
+      const coverHtml = sug.cover_url
+        ? `<img class="bt-sug-cover" src="${escHtml(sug.cover_url)}" alt="" loading="lazy"
+              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+           <div class="bt-sug-cover bt-cover--placeholder" style="display:none">?</div>`
+        : `<div class="bt-sug-cover bt-cover--placeholder">?</div>`;
+
+      const score = sug.score != null
+        ? `<span class="refresh-score refresh-score--${sug.score >= 90 ? 'high' : sug.score >= 60 ? 'mid' : 'low'}">${sug.score}%</span>`
+        : '';
+
+        // Daten als data-* Attribute – sicher gegen Anführungszeichen in Metadaten
+      return `
+        <div class="bt-sug-card" title="${escHtml(sug.artist)} – ${escHtml(sug.title)} (${escHtml(sug.year)})">
+          ${coverHtml}
+          <div class="bt-sug-info">
+            <span class="bt-sug-title">${escHtml(sug.title)}</span>
+            <span class="bt-sug-artist">${escHtml(sug.artist)}</span>
+            <span class="bt-sug-year">${escHtml(sug.year)} ${score}</span>
+          </div>
+          <button
+            class="bt-sug-apply"
+            title="Übernehmen"
+            data-item-id="${itemId}"
+            data-title="${escHtml(sug.title)}"
+            data-artist="${escHtml(sug.artist)}"
+            data-year="${escHtml(sug.year)}"
+            data-cover="${escHtml(sug.cover_url || '')}"
+            data-mbid="${escHtml(sug.mbid || '')}"
+            data-genre="${escHtml(sug.genre || '')}"
+            onclick="handleApply(this)"
+          >✔</button>
+        </div>`;
+    }
+
+    // Metadaten anwenden ohne Seitenwechsel – liest data-* vom Button
+    function handleApply(btn) {
+      const { itemId, title, artist, year, cover, mbid, genre } = btn.dataset;
+      applyAndMark(Number(itemId), btn, title, artist, year, cover, mbid, genre);
+    }
+
+    // Metadaten anwenden ohne Seitenwechsel
+    async function applyAndMark(itemId, btn, title, artist, year, cover_url, mbid, genre) {
+      btn.disabled   = true;
+      btn.textContent = '…';
+      try {
+        const fd = new FormData();
+        fd.append('title',     title);
+        fd.append('artist',    artist);
+        fd.append('year',      year);
+        fd.append('cover_url', cover_url);
+        fd.append('mbid',      mbid);
+        fd.append('genre',     genre);
+        const resp = await fetch(`${BASE}/items/${itemId}/refresh/apply`, {
+          method: 'POST', body: fd, redirect: 'manual',
+        });
+        if (resp.ok || resp.type === 'opaqueredirect' || resp.status === 302) {
+          // Zeile als "erledigt" markieren
+          const row = document.getElementById('row-' + itemId);
+          row?.classList.add('bt-row--applied');
+          document.getElementById('status-' + itemId).innerHTML =
+            '<span class="bt-applied-badge">✔ übernommen</span>';
+          // Cover in der ersten Spalte aktualisieren
+          const coverCell = row?.querySelector('.bt-cover, .bt-cover--placeholder');
+          if (coverCell && cover_url) {
+            coverCell.outerHTML = `<img class="bt-cover" src="${escHtml(cover_url)}" alt="" loading="lazy" onerror="this.style.display='none'" />`;
+          }
+        } else {
+          btn.textContent   = '✘';
+          btn.style.color = 'var(--color-danger)';
+        }
+      } catch {
+        btn.textContent = '✘';
+      }
+    }
+
+    // Einen Eintrag suchen und Spalten befüllen
+    async function fetchRow(row) {
+      if (stopped) return;
+      const id     = row.dataset.id;
+      const title  = row.dataset.title;
+      const artist = row.dataset.artist;
+      const status = document.getElementById('status-' + id);
+
+      status.innerHTML = '<span class="bt-loading">…</span>';
+
+      try {
+        const params = new URLSearchParams({ q: title });
+        if (artist) params.set('artist', artist);
+        const res  = await fetch(`${BASE}/api/search?${params}`);
+        const sugs = await res.json();
+
+        // Slots befüllen
+        for (let i = 0; i < 5; i++) {
+          const cell = document.getElementById(`sug-${id}-${i + 1}`);
+          if (!cell) continue;
+          if (sugs[i]) {
+            cell.innerHTML = sugCard(Number(id), sugs[i]);
+          } else {
+            cell.innerHTML = '<div class="bt-sug-empty">–</div>';
+          }
+        }
+        status.innerHTML = sugs.length
+          ? `<span class="bt-found">${sugs.length} Treffer</span>`
+          : '<span class="bt-not-found">keine Treffer</span>';
+      } catch {
+        status.innerHTML = '<span class="bt-error">Fehler</span>';
+      }
+
+      done++;
+      setProgress(done, total);
+      if (done >= total) {
+        btnStop.style.display  = 'none';
+        btnStart.style.display = '';
+        btnStart.textContent   = '🔄 Erneut suchen';
+        btnStart.disabled      = false;
+      }
+    }
+
+    btnStart.addEventListener('click', () => {
+      stopped = false;
+      done    = 0;
+      const rows = [...document.querySelectorAll('.bt-row')];
+      total = rows.length;
+      setProgress(0, total);
+      btnStart.style.display = 'none';
+      btnStop.style.display  = '';
+
+      // Alle Requests gleichzeitig abschicken –
+      // server-seitiger Rate-Limiter queued sie auf 1/1.15s
+      rows.forEach(row => fetchRow(row));
+    });
+
+    btnStop.addEventListener('click', () => {
+      stopped = true;
+      btnStop.style.display  = 'none';
+      btnStart.style.display = '';
+      btnStart.disabled      = false;
+      btnStart.textContent   = '🔄 Weitersuchen';
+    });
+  </script>
+</body>
+</html>

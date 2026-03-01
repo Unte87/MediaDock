@@ -91,6 +91,17 @@ router.post('/add', async (req, res, next) => {
   }
 });
 
+// ── Massenanalyse ─────────────────────────────────────────────────────────────
+
+router.get('/bulk-refresh', (req, res, next) => {
+  try {
+    const items = db.getAllItems({ media_type: 'all' });
+    res.render('bulk-refresh', { items });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ── Detail page ───────────────────────────────────────────────────────────────
 
 router.get('/:id', (req, res, next) => {
