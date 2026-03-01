@@ -179,11 +179,10 @@
       btn.disabled    = true;
       btn.textContent = '…';
       try {
-        const params = new URLSearchParams({ title, artist, year, cover_url, mbid, genre });
         const resp = await fetch(`${BASE}/items/${itemId}/refresh/apply?json=1`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: params.toString(),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, artist, year, cover_url, mbid, genre }),
         });
         const data = resp.ok ? await resp.json().catch(() => ({})) : {};
         if (resp.ok && data.ok) {
@@ -202,8 +201,8 @@
           btn.style.color = 'var(--color-danger)';
           btn.disabled    = false;
         }
-      } catch {
-        btn.textContent = '✘';
+      } catch (err) {
+        btn.textContent = '✘ ' + (err.message || 'Fehler');
         btn.disabled    = false;
       }
     }
