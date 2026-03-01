@@ -193,6 +193,8 @@ router.post('/:id/refresh/apply', (req, res, next) => {
       genre:     genre?.trim()     || item.genre || '',
     });
 
+    // JSON-Antwort für Ajax-Requests (z.B. Massenanalyse)
+    if (req.query.json) return res.json({ ok: true });
     res.redirect(`${res.app.locals.base}/items/${id}`);
   } catch (err) {
     next(err);

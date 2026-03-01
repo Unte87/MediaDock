@@ -241,33 +241,92 @@ img { max-width: 100%; display: block; }
   gap: 1.1rem;
 }
 
-/* ── Carousel-Ansicht: Cover fullbleed mit Gradient-Overlay ───────────────── */
-.item-grid.view-carousel {
-  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-  gap: 1.25rem;
-}
-.item-grid.view-carousel .item-card {
+/* ── Karussell-Wrapper ────────────────────────────────────────────────────── */
+.carousel-wrap {
   position: relative;
-  aspect-ratio: 1 / 1;
+}
+.carousel-arrow {
+  display: none;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 14px rgba(0,0,0,.4);
+  transition: background var(--transition), transform .15s;
+  opacity: .9;
+}
+.carousel-arrow:hover        { background: var(--color-surface-2); opacity: 1; transform: translateY(-50%) scale(1.08); }
+.carousel-arrow--prev        { left:  -22px; }
+.carousel-arrow--next        { right: -22px; }
+.carousel-wrap.is-carousel .carousel-arrow { display: flex; }
+
+/* ── Coverflow: ein Cover zentriert, Nachbarn peek-in ─────────────────────── */
+.item-grid.view-carousel {
+  /* Horizontaler Scroll-Streifen */
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  overflow-x: scroll;
+  overflow-y: visible;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  gap: 1.5rem;
+  /* Zentrierung: linkes + rechtes Padding = (containerBreite - Kartenbreite)/2 */
+  padding-inline: calc(50% - 130px);
+  /* genügend Höhe für Hover-Scale */
+  padding-top: 1.5rem;
+  padding-bottom: 2rem;
+  /* Grid-Basis überschreiben */
+  grid-template-columns: unset;
+}
+.item-grid.view-carousel::-webkit-scrollbar { display: none; }
+
+/* Jede Karte: fixe Größe, zunächst etwas verkleinert + transparent */
+.item-grid.view-carousel .item-card {
+  flex: 0 0 260px;
+  width: 260px;
+  height: 390px;
+  scroll-snap-align: center;
+  position: relative;
   border: none;
-  border-radius: var(--radius-lg, 12px);
-  box-shadow: 0 4px 22px rgba(0,0,0,.45);
+  border-radius: var(--radius-lg, 14px);
+  box-shadow: 0 6px 28px rgba(0,0,0,.55);
   overflow: hidden;
   background: var(--color-surface-2);
-  transition: transform .22s ease, box-shadow .22s ease;
+  /* abgeblendet, etwas kleiner */
+  transform: scale(0.82);
+  opacity: .55;
+  filter: brightness(.75);
+  transition: transform .38s ease, opacity .38s ease, filter .38s ease, box-shadow .38s ease;
+  cursor: pointer;
 }
-.item-grid.view-carousel .item-card:hover {
-  transform: translateY(-6px) scale(1.03);
-  box-shadow: 0 14px 42px rgba(0,0,0,.65);
+/* Die aktive (zentrierte) Karte ist groß und voll sichtbar */
+.item-grid.view-carousel .item-card.carousel-active {
+  transform: scale(1);
+  opacity: 1;
+  filter: brightness(1);
+  box-shadow: 0 16px 56px rgba(0,0,0,.75);
+  cursor: default;
+  z-index: 2;
 }
-/* Link füllt die gesamte Karte */
+/* Link füllt die Karte */
 .item-grid.view-carousel .item-link {
   position: absolute;
   inset: 0;
   display: block;
   overflow: hidden;
 }
-/* Cover absolut über die gesamte Karte */
+/* Cover fullbleed */
 .item-grid.view-carousel .item-cover {
   position: absolute;
   inset: 0;
@@ -278,30 +337,27 @@ img { max-width: 100%; display: block; }
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform .35s ease;
+  transition: transform .4s ease;
 }
-.item-grid.view-carousel .item-card:hover .item-cover img {
-  transform: scale(1.07);
+.item-grid.view-carousel .item-card.carousel-active:hover .item-cover img {
+  transform: scale(1.05);
 }
-/* Gradient-Overlay unten */
+/* Gradient-Info-Overlay */
 .item-grid.view-carousel .item-info {
   position: absolute;
   bottom: 0; left: 0; right: 0;
-  padding: 2.2rem .85rem .75rem;
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(0,0,0,.72) 50%,
-    rgba(0,0,0,.93) 100%
-  );
-  backdrop-filter: blur(0px);
+  padding: 3rem .9rem .8rem;
+  background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.75) 50%, rgba(0,0,0,.95) 100%);
+  opacity: 0;
+  transition: opacity .3s;
 }
+.item-grid.view-carousel .item-card.carousel-active .item-info { opacity: 1; }
 .item-grid.view-carousel .item-title {
   font-size: .95rem;
   font-weight: 700;
   color: #fff;
-  text-shadow: 0 1px 5px rgba(0,0,0,.6);
-  margin-bottom: .15rem;
+  text-shadow: 0 1px 4px rgba(0,0,0,.7);
+  margin-bottom: .1rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -309,41 +365,28 @@ img { max-width: 100%; display: block; }
 .item-grid.view-carousel .item-artist {
   font-size: .78rem;
   color: rgba(255,255,255,.78);
-  text-shadow: 0 1px 3px rgba(0,0,0,.5);
-  margin-bottom: .25rem;
+  margin-bottom: .2rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.item-grid.view-carousel .item-year  { color: rgba(255,255,255,.55); font-size: .7rem; }
-.item-grid.view-carousel .badge      { font-size: .62rem; opacity: .88; }
-/* Placeholder im Carousel */
+.item-grid.view-carousel .item-year   { color: rgba(255,255,255,.5); font-size: .68rem; }
+.item-grid.view-carousel .badge       { font-size: .6rem; opacity: .9; }
 .item-grid.view-carousel .cover-placeholder {
-  position: absolute;
-  inset: 0;
-  width: auto; height: auto;
+  position: absolute; inset: 0; width: auto; height: auto;
   background: linear-gradient(135deg, var(--color-surface-2) 0%, var(--color-border) 100%);
-  font-size: 3.5rem;
+  font-size: 4rem;
 }
-/* Green-Hell-Link hochgesetzt */
 .item-grid.view-carousel .gh-link {
-  position: absolute;
-  top: .45rem; right: .45rem;
-  font-size: .64rem;
-  background: rgba(0,0,0,.55);
-  color: rgba(255,255,255,.85);
-  border-radius: 4px;
-  padding: 2px 7px;
-  backdrop-filter: blur(6px);
-  text-decoration: none;
-  z-index: 3;
-  white-space: nowrap;
-  transition: background .15s;
+  position: absolute; top: .45rem; right: .45rem;
+  font-size: .62rem; background: rgba(0,0,0,.55); color: rgba(255,255,255,.85);
+  border-radius: 4px; padding: 2px 7px; backdrop-filter: blur(6px);
+  text-decoration: none; z-index: 3; white-space: nowrap;
+  opacity: 0; transition: opacity .3s;
 }
-.item-grid.view-carousel .gh-link:hover {
-  background: rgba(0,0,0,.78);
-  color: #fff;
-}
+.item-grid.view-carousel .item-card.carousel-active .gh-link { opacity: 1; }
+.item-grid.view-carousel .gh-link:hover { background: rgba(0,0,0,.8); color: #fff; }
+.item-grid.view-carousel .item-checkbox-wrap { top: .45rem; left: .45rem; z-index: 3; }
 
 /* Listenansicht */
 .item-grid.view-list {

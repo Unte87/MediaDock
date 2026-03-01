@@ -85,11 +85,11 @@
               <rect x="0" y="13" width="16" height="3" rx="1"/>
             </svg>
           </button>
-          <button class="view-btn" id="view-carousel" title="Großkacheln">
+          <button class="view-btn" id="view-carousel" title="Karussell">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-              <rect x="2" y="0" width="12" height="12" rx="2"/>
-              <rect x="0" y="13" width="4" height="3" rx="1"/><rect x="6" y="13" width="4" height="3" rx="1"/>
-              <rect x="12" y="13" width="4" height="3" rx="1"/>
+              <rect x="0" y="2" width="5" height="12" rx="1.5"/>
+              <rect x="6" y="0" width="4" height="16" rx="1.5"/>
+              <rect x="11" y="2" width="5" height="12" rx="1.5"/>
             </svg>
           </button>
         </div>
@@ -108,7 +108,11 @@
       <div id="no-results" class="empty-state" style="display:none">
         <p>Keine Ergebnisse für diese Suche.</p>
       </div>
-      <ul class="item-grid" id="item-grid">
+      <div class="carousel-wrap" id="carousel-wrap">
+        <button class="carousel-arrow carousel-arrow--prev" id="carousel-prev" aria-label="Zurück">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M12.5 4L7 10l5.5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+        </button>
+        <ul class="item-grid" id="item-grid">
         <% for (const item of items) { %>
           <li class="item-card"
               data-id="<%= item.id %>"
@@ -156,7 +160,11 @@
             <% } %>
           </li>
         <% } %>
-      </ul>
+        </ul>
+        <button class="carousel-arrow carousel-arrow--next" id="carousel-next" aria-label="Weiter">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M7.5 4L13 10l-5.5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+        </button>
+      </div>
     <% } %>
 
     <!-- Hidden bulk-delete form -->
@@ -198,10 +206,61 @@
         grid?.classList.toggle('view-' + name, name === v);
         document.getElementById('view-' + name)?.classList.toggle('active', name === v);
       });
+      const wrap = document.getElementById('carousel-wrap');
+      wrap?.classList.toggle('is-carousel', v === 'carousel');
+      if (v === 'carousel') initCarousel();
     }
 
     VIEWS.forEach(v => document.getElementById('view-' + v)?.addEventListener('click', () => applyView(v)));
     applyView(currentView);
+
+    // ── Coverflow-Karussell ────────────────────────────────────────────────
+    let carouselObserver = null;
+
+    function visibleCards() {
+      return grid ? [...grid.querySelectorAll('.item-card')].filter(c => c.style.display !== 'none') : [];
+    }
+
+    function scrollToCard(card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+
+    function initCarousel() {
+      if (carouselObserver) carouselObserver.disconnect();
+      carouselObserver = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+          e.target.classList.toggle('carousel-active', e.intersectionRatio >= 0.6);
+        });
+      }, { root: grid, threshold: 0.6 });
+      visibleCards().forEach(c => carouselObserver.observe(c));
+    }
+
+    document.getElementById('carousel-prev')?.addEventListener('click', () => {
+      const cards   = visibleCards();
+      const active  = cards.findIndex(c => c.classList.contains('carousel-active'));
+      const target  = cards[Math.max(0, active - 1)];
+      if (target) scrollToCard(target);
+    });
+    document.getElementById('carousel-next')?.addEventListener('click', () => {
+      const cards   = visibleCards();
+      const active  = cards.findIndex(c => c.classList.contains('carousel-active'));
+      const target  = cards[Math.min(cards.length - 1, active + 1)];
+      if (target) scrollToCard(target);
+    });
+    // Nicht-aktive Karten im Carousel: Klick scrollt zu ihnen, kein Detailaufruf
+    document.getElementById('item-grid')?.addEventListener('click', e => {
+      if (currentView !== 'carousel') return;
+      const card = e.target.closest('.item-card');
+      if (!card || card.classList.contains('carousel-active')) return;
+      e.preventDefault();
+      scrollToCard(card);
+    });
+    // Pfeiltasten im Carousel
+    document.addEventListener('keydown', e => {
+      if (currentView !== 'carousel') return;
+      if (e.key === 'ArrowLeft')  document.getElementById('carousel-prev')?.click();
+      if (e.key === 'ArrowRight') document.getElementById('carousel-next')?.click();
+    });
 
     // ── Suche + Filter + Sortierung ────────────────────────────────────────
     const searchInput  = document.getElementById('search-input');

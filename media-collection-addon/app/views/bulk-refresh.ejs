@@ -176,7 +176,7 @@
 
     // Metadaten anwenden ohne Seitenwechsel
     async function applyAndMark(itemId, btn, title, artist, year, cover_url, mbid, genre) {
-      btn.disabled   = true;
+      btn.disabled    = true;
       btn.textContent = '…';
       try {
         const fd = new FormData();
@@ -186,10 +186,11 @@
         fd.append('cover_url', cover_url);
         fd.append('mbid',      mbid);
         fd.append('genre',     genre);
-        const resp = await fetch(`${BASE}/items/${itemId}/refresh/apply`, {
-          method: 'POST', body: fd, redirect: 'manual',
+        const resp = await fetch(`${BASE}/items/${itemId}/refresh/apply?json=1`, {
+          method: 'POST', body: fd,
         });
-        if (resp.ok || resp.type === 'opaqueredirect' || resp.status === 302) {
+        const data = resp.ok ? await resp.json().catch(() => ({})) : {};
+        if (resp.ok && data.ok) {
           // Zeile als "erledigt" markieren
           const row = document.getElementById('row-' + itemId);
           row?.classList.add('bt-row--applied');
@@ -201,11 +202,13 @@
             coverCell.outerHTML = `<img class="bt-cover" src="${escHtml(cover_url)}" alt="" loading="lazy" onerror="this.style.display='none'" />`;
           }
         } else {
-          btn.textContent   = '✘';
+          btn.textContent = '✘';
           btn.style.color = 'var(--color-danger)';
+          btn.disabled    = false;
         }
       } catch {
         btn.textContent = '✘';
+        btn.disabled    = false;
       }
     }
 
