@@ -1,7 +1,7 @@
 <%
   /*
    * views/index.ejs
-   * Main collection overview: filterable grid of all media items.
+   * Main collection overview: filterable/searchable/sortable grid of all media items.
    */
   const pageTitle = 'Sammlung';
 %>
@@ -29,21 +29,73 @@
   <main class="container">
     <h1 class="page-title">Meine Sammlung</h1>
 
-    <!-- ── Filter bar ──────────────────────────────────────────────────── -->
-    <form class="filter-bar" method="get" action="<%= base %>/">
+    <!-- ── Toolbar ────────────────────────────────────────────────────────── -->
+    <div class="toolbar">
+
+      <!-- Suche -->
+      <div class="toolbar-search">
+        <span class="toolbar-search-icon">🔍</span>
+        <input
+          id="search-input"
+          type="search"
+          placeholder="Titel oder Künstler…"
+          autocomplete="off"
+          spellcheck="false"
+        />
+      </div>
+
+      <!-- Status-Filter -->
       <div class="filter-group">
         <label for="status">Status</label>
-        <select id="status" name="status" onchange="this.form.submit()">
+        <select id="status-filter">
           <option value="all"      <%= selectedStatus === 'all'      ? 'selected' : '' %>>Alle</option>
           <option value="owned"    <%= selectedStatus === 'owned'    ? 'selected' : '' %>>Besitze ich</option>
           <option value="wishlist" <%= selectedStatus === 'wishlist' ? 'selected' : '' %>>Wunschliste</option>
         </select>
       </div>
 
-      <span class="filter-count"><%= items.length %> Platten</span>
-    </form>
+      <!-- Sortierung -->
+      <div class="filter-group">
+        <label for="sort-select">Sortierung</label>
+        <select id="sort-select">
+          <option value="added-desc">Zuletzt hinzugefügt</option>
+          <option value="title-asc">Titel A–Z</option>
+          <option value="title-desc">Titel Z–A</option>
+          <option value="artist-asc">Künstler A–Z</option>
+          <option value="year-asc">Jahr ↑</option>
+          <option value="year-desc">Jahr ↓</option>
+          <option value="rating-desc">Bewertung ↓</option>
+        </select>
+      </div>
 
-    <!-- ── Item grid ───────────────────────────────────────────────────── -->
+      <!-- Ansicht + Zähler -->
+      <div class="toolbar-right">
+        <span class="filter-count" id="item-count"><%= items.length %> Platten</span>
+        <div class="view-toggle" role="group" aria-label="Ansicht">
+          <button class="view-btn active" id="view-grid"    title="Raster">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <rect x="0" y="0" width="6" height="6" rx="1"/><rect x="10" y="0" width="6" height="6" rx="1"/>
+              <rect x="0" y="10" width="6" height="6" rx="1"/><rect x="10" y="10" width="6" height="6" rx="1"/>
+            </svg>
+          </button>
+          <button class="view-btn" id="view-list"    title="Liste">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <rect x="0" y="1" width="16" height="3" rx="1"/><rect x="0" y="7" width="16" height="3" rx="1"/>
+              <rect x="0" y="13" width="16" height="3" rx="1"/>
+            </svg>
+          </button>
+          <button class="view-btn" id="view-carousel" title="Großkacheln">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <rect x="2" y="0" width="12" height="12" rx="2"/>
+              <rect x="0" y="13" width="4" height="3" rx="1"/><rect x="6" y="13" width="4" height="3" rx="1"/>
+              <rect x="12" y="13" width="4" height="3" rx="1"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Item list / grid ───────────────────────────────────────────────── -->
     <% if (items.length === 0) { %>
       <div class="empty-state">
         <p>Noch keine Einträge. <a href="<%= base %>/items/add">Jetzt hinzufügen &rsaquo;</a></p>
@@ -52,9 +104,19 @@
       <div class="select-mode-toggle">
         <button type="button" class="btn btn-ghost btn-sm" id="btn-toggle-select">☐ Mehrere auswählen</button>
       </div>
+      <div id="no-results" class="empty-state" style="display:none">
+        <p>Keine Ergebnisse für diese Suche.</p>
+      </div>
       <ul class="item-grid" id="item-grid">
         <% for (const item of items) { %>
-          <li class="item-card" data-id="<%= item.id %>">
+          <li class="item-card"
+              data-id="<%= item.id %>"
+              data-title="<%= (item.title  || '').toLowerCase() %>"
+              data-artist="<%= (item.artist || '').toLowerCase() %>"
+              data-year="<%= item.year  || '0' %>"
+              data-rating="<%= item.rating || 0 %>"
+              data-status="<%= item.owned ? 'owned' : item.wishlist ? 'wishlist' : 'none' %>"
+              data-added="<%= item.id %>">
             <label class="item-checkbox-wrap" aria-label="Auswählen">
               <input type="checkbox" class="item-checkbox" value="<%= item.id %>" tabindex="-1" />
               <span class="item-checkbox-box">✔</span>
@@ -96,11 +158,11 @@
       </ul>
     <% } %>
 
-    <!-- Hidden bulk-delete form (IDs werden per JS eingefügt) -->
+    <!-- Hidden bulk-delete form -->
     <form id="bulk-delete-form" method="post" action="<%= base %>/items/bulk-delete" style="display:none"></form>
   </main>
 
-  <!-- ── Sticky Bulk-Action-Bar ──────────────────────────────────────────── -->
+  <!-- ── Sticky Bulk-Action-Bar ─────────────────────────────────────────────── -->
   <div class="bulk-action-bar" id="bulk-action-bar">
     <span class="bulk-count" id="bulk-count">0 ausgewählt</span>
     <div class="bulk-actions">
@@ -120,8 +182,94 @@
     const bulkBar   = document.getElementById('bulk-action-bar');
     const bulkCount = document.getElementById('bulk-count');
     const btnToggle = document.getElementById('btn-toggle-select');
+    const noResults = document.getElementById('no-results');
+    const countEl   = document.getElementById('item-count');
     let selectMode  = false;
 
+    // ── Ansicht ────────────────────────────────────────────────────────────
+    const VIEWS = ['grid', 'list', 'carousel'];
+    let currentView = localStorage.getItem('md-view') || 'grid';
+
+    function applyView(v) {
+      currentView = v;
+      localStorage.setItem('md-view', v);
+      VIEWS.forEach(name => {
+        grid?.classList.toggle('view-' + name, name === v);
+        document.getElementById('view-' + name)?.classList.toggle('active', name === v);
+      });
+    }
+
+    VIEWS.forEach(v => document.getElementById('view-' + v)?.addEventListener('click', () => applyView(v)));
+    applyView(currentView);
+
+    // ── Suche + Filter + Sortierung ────────────────────────────────────────
+    const searchInput  = document.getElementById('search-input');
+    const statusFilter = document.getElementById('status-filter');
+    const sortSelect   = document.getElementById('sort-select');
+
+    // Gespeicherte Einstellungen laden
+    sortSelect.value   = localStorage.getItem('md-sort')   || 'added-desc';
+    statusFilter.value = localStorage.getItem('md-status') || 'all';
+
+    function allCards() { return grid ? [...grid.querySelectorAll('.item-card')] : []; }
+
+    function applyFiltersAndSort() {
+      const q      = (searchInput?.value || '').toLowerCase().trim();
+      const status = statusFilter.value;
+      const sort   = sortSelect.value;
+
+      localStorage.setItem('md-sort',   sort);
+      localStorage.setItem('md-status', status);
+
+      let cards = allCards();
+
+      // Filter
+      let visibleCount = 0;
+      cards.forEach(card => {
+        const matchQ = !q
+          || card.dataset.title.includes(q)
+          || card.dataset.artist.includes(q);
+
+        const cardStatus = card.dataset.status;
+        const matchStatus = status === 'all'
+          || (status === 'owned'    && cardStatus === 'owned')
+          || (status === 'wishlist' && cardStatus === 'wishlist');
+
+        const visible = matchQ && matchStatus;
+        card.style.display = visible ? '' : 'none';
+        if (visible) visibleCount++;
+      });
+
+      noResults && (noResults.style.display = visibleCount === 0 ? '' : 'none');
+      countEl   && (countEl.textContent = visibleCount + ' Platten');
+
+      // Sortierung: nur sichtbare Karten neu anordnen
+      const visible = cards.filter(c => c.style.display !== 'none');
+      visible.sort((a, b) => {
+        switch (sort) {
+          case 'title-asc':    return a.dataset.title.localeCompare(b.dataset.title, 'de');
+          case 'title-desc':   return b.dataset.title.localeCompare(a.dataset.title, 'de');
+          case 'artist-asc':   return a.dataset.artist.localeCompare(b.dataset.artist, 'de');
+          case 'year-asc':     return Number(a.dataset.year)  - Number(b.dataset.year);
+          case 'year-desc':    return Number(b.dataset.year)  - Number(a.dataset.year);
+          case 'rating-desc':  return Number(b.dataset.rating) - Number(a.dataset.rating);
+          default: /* added-desc */ return Number(b.dataset.added) - Number(a.dataset.added);
+        }
+      });
+      visible.forEach(c => grid.appendChild(c));
+    }
+
+    let debounceTimer;
+    searchInput?.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(applyFiltersAndSort, 150);
+    });
+    statusFilter?.addEventListener('change', applyFiltersAndSort);
+    sortSelect?.addEventListener('change', applyFiltersAndSort);
+
+    applyFiltersAndSort();
+
+    // ── Mehrfachauswahl ────────────────────────────────────────────────────
     function checkboxes() { return grid ? [...grid.querySelectorAll('.item-checkbox')] : []; }
     function selected()   { return checkboxes().filter(c => c.checked); }
 
@@ -166,12 +314,10 @@
       checkboxes().forEach(c => { c.checked = true; c.closest('.item-card').classList.add('selected'); });
       updateBar();
     });
-
     document.getElementById('bulk-btn-none')?.addEventListener('click', () => {
       checkboxes().forEach(c => { c.checked = false; c.closest('.item-card').classList.remove('selected'); });
       updateBar();
     });
-
     document.getElementById('bulk-btn-delete')?.addEventListener('click', () => {
       const ids = selected().map(c => c.value);
       if (!ids.length) return;

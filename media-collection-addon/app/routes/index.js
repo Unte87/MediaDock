@@ -14,17 +14,15 @@ const MEDIA_TYPES = ['vinyl'];
 
 router.get('/', (req, res, next) => {
   try {
-    const { type, status } = req.query;
+    const { status } = req.query;
 
-    const items = db.getAllItems({
-      media_type: type || 'all',
-      status: status || undefined,
-    });
+    // Alle Items laden – Filterung + Sortierung passiert clientseitig
+    const items = db.getAllItems({ media_type: 'all' });
 
     res.render('index', {
       items,
       mediaTypes: MEDIA_TYPES,
-      selectedType: type || 'all',
+      selectedType: 'all',
       selectedStatus: status || 'all',
     });
   } catch (err) {
