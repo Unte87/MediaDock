@@ -1,0 +1,133 @@
+<%
+  /*
+   * views/refresh.ejs
+   * Zeigt MusicBrainz-Vorschläge für einen Eintrag.
+   * Der Nutzer wählt einen Treffer aus – erst dann werden Daten übernommen.
+   */
+%>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Metadaten nachladen – <%= item.title %></title>
+  <link rel="stylesheet" href="<%= base %>/public/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="logo" href="<%= base %>/">
+      <span class="logo-icon">🎵</span>
+      <span class="logo-text">MediaDock</span>
+    </a>
+    <nav>
+      <a href="<%= base %>/">Sammlung</a>
+      <a href="<%= base %>/csv">CSV-Import</a>
+      <a href="<%= base %>/items/add" class="btn btn-primary">+ Hinzufügen</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <a href="<%= base %>/items/<%= item.id %>" class="back-link">&larr; Zurück zu „<%= item.title %>"</a>
+    <h1 class="page-title">Metadaten nachladen</h1>
+
+    <!-- ── Aktueller Stand ──────────────────────────────────────────────── -->
+    <div class="refresh-current">
+      <h2 class="refresh-section-title">Aktueller Eintrag</h2>
+      <div class="refresh-current-card">
+        <div class="result-cover">
+          <% if (item.cover_url) { %>
+            <img src="<%= item.cover_url %>" alt="<%= item.title %>" loading="lazy" />
+          <% } else { %>
+            <div class="cover-placeholder"><span>🎵</span></div>
+          <% } %>
+        </div>
+        <div class="result-info">
+          <p class="result-title"><%= item.title %></p>
+          <p class="result-artist"><%= item.artist || '–' %></p>
+          <p class="result-year"><%= item.year || '–' %></p>
+          <% if (item.mbid) { %>
+            <p class="refresh-mbid-note">MBID vorhanden</p>
+          <% } else { %>
+            <p class="refresh-mbid-note refresh-mbid-missing">Kein MBID</p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Fehler ────────────────────────────────────────────────────────── -->
+    <% if (searchError) { %>
+      <div class="alert alert-error"><%= searchError %></div>
+    <% } %>
+
+    <!-- ── Vorschläge ───────────────────────────────────────────────────── -->
+    <% if (!searchError) { %>
+      <h2 class="refresh-section-title">
+        MusicBrainz-Vorschläge
+        <span class="refresh-hint">(Klicken um zu übernehmen)</span>
+      </h2>
+
+      <% if (!suggestions || suggestions.length === 0) { %>
+        <div class="empty-state">
+          <p>Keine Treffer gefunden für „<strong><%= item.title %></strong>"
+            <% if (item.artist) { %> von <strong><%= item.artist %></strong><% } %>.</p>
+          <p>Tipp: Titel oder Künstler im Eintrag anpassen und erneut versuchen.</p>
+        </div>
+      <% } else { %>
+        <div class="refresh-results">
+          <% for (const s of suggestions) { %>
+            <form
+              class="refresh-card"
+              method="post"
+              action="<%= base %>/items/<%= item.id %>/refresh/apply"
+            >
+              <input type="hidden" name="title"     value="<%= s.title     || '' %>" />
+              <input type="hidden" name="artist"    value="<%= s.artist    || '' %>" />
+              <input type="hidden" name="year"      value="<%= s.year      || '' %>" />
+              <input type="hidden" name="cover_url" value="<%= s.cover_url || '' %>" />
+              <input type="hidden" name="mbid"      value="<%= s.mbid      || '' %>" />
+              <button type="submit" class="refresh-card-btn">
+                <div class="result-cover">
+                  <% if (s.cover_url) { %>
+                    <img
+                      src="<%= s.cover_url %>"
+                      alt="<%= s.title %>"
+                      loading="lazy"
+                      onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
+                    />
+                    <div class="cover-placeholder" style="display:none"><span>?</span></div>
+                  <% } else { %>
+                    <div class="cover-placeholder"><span>?</span></div>
+                  <% } %>
+                </div>
+              <div class="result-info">
+                  <p class="result-title"><%= s.title %></p>
+                  <p class="result-artist"><%= s.artist || '–' %></p>
+                  <p class="result-year">
+                    <%= s.year || '–' %>
+                    <% if (s.type) { %><span class="result-type"> · <%= s.type %></span><% } %>
+                    <% if (s.score != null) { %>
+                      <span class="refresh-score refresh-score--<%= s.score >= 90 ? 'high' : s.score >= 60 ? 'mid' : 'low' %>">
+                        <%= s.score %>%
+                      </span>
+                    <% } %>
+                  </p>
+                </div>
+                <span class="result-add-icon">✔</span>
+              </button>
+            </form>
+          <% } %>
+        </div>
+      <% } %>
+    <% } %>
+
+    <!-- ── Abbrechen ────────────────────────────────────────────────────── -->
+    <div class="form-actions" style="margin-top: 2rem">
+      <a href="<%= base %>/items/<%= item.id %>" class="btn btn-ghost">Abbrechen, nichts übernehmen</a>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <small>MediaDock &mdash; persönliche Mediensammlung</small>
+  </footer>
+</body>
+</html>

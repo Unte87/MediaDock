@@ -568,3 +568,65 @@ img { max-width: 100%; display: block; }
   font-size: .8rem;
   line-height: 1.7;
 }
+
+/* ── Metadata Refresh view ───────────────────────────────────────────────────── */
+.refresh-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 1.75rem 0 .75rem;
+  display: flex;
+  align-items: baseline;
+  gap: .6rem;
+}
+.refresh-hint {
+  font-size: .75rem;
+  font-weight: 400;
+  color: var(--color-muted);
+}
+.refresh-current-card {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: .85rem 1rem;
+  max-width: 420px;
+}
+.refresh-current-card .result-cover { width: 72px; flex-shrink: 0; }
+.refresh-mbid-note        { font-size: .72rem; color: var(--color-muted); margin-top: .25rem; }
+.refresh-mbid-missing     { color: var(--color-danger); }
+.refresh-results          { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .75rem; }
+.refresh-card             { margin: 0; padding: 0; }
+.refresh-card-btn {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  width: 100%;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: .7rem;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color var(--transition), background var(--transition);
+  color: var(--color-text);
+  font-family: inherit;
+}
+.refresh-card-btn:hover   { border-color: var(--color-accent); background: var(--color-surface); }
+.refresh-card-btn .result-cover { width: 60px; flex-shrink: 0; }
+.refresh-card-btn .result-add-icon { margin-left: auto; font-size: 1.1rem; color: var(--color-accent); opacity: 0; transition: opacity var(--transition); }
+.refresh-card-btn:hover .result-add-icon { opacity: 1; }
+.result-type { color: var(--color-muted); }
+.refresh-score {
+  display: inline-block;
+  font-size: .68rem;
+  font-weight: 700;
+  padding: .1rem .35rem;
+  border-radius: 4px;
+  margin-left: .3rem;
+  vertical-align: middle;
+}
+.refresh-score--high { background: color-mix(in srgb, #4caf50 22%, transparent); color: #6de066; }
+.refresh-score--mid  { background: color-mix(in srgb, #f5a623 22%, transparent); color: #f5c518; }
+.refresh-score--low  { background: color-mix(in srgb, var(--color-danger) 22%, transparent); color: var(--color-danger); }

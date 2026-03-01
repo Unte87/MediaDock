@@ -115,14 +115,11 @@
             <button type="submit" class="btn btn-primary">Speichern</button>
           </div>
         </form>
-        <!-- ── Metadaten nachladen ──────────────────────────────────── -->
-        <form
-          method="post"
-          action="<%= base %>/items/<%= item.id %>/refresh"
-          class="refresh-form"
-        >
-          <button type="submit" class="btn btn-secondary btn-refresh">🔄 Metadaten nachladen</button>
-        </form>
+        <!-- ── Metadaten nachladen ───────────────────────────────────────── -->
+        <a
+          href="<%= base %>/items/<%= item.id %>/refresh"
+          class="btn btn-secondary btn-refresh"
+        >🔄 Metadaten nachladen</a>
         <!-- ── Delete ───────────────────────────────────────────────────── -->
         <form
           method="post"

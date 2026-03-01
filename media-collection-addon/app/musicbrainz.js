@@ -39,39 +39,83 @@ async function searchMusicBrainz(title, artist = '') {
 
 /**
  * Sucht nach Releases und gibt bis zu `limit` Ergebnisse zurück.
- * Verwendet KEINE Anführungszeichen in der Lucene-Query, damit die Suche
- * case-insensitiv und tolerant gegenüber Tippfehlern ist.
- * "~" am Ende jedes Terms aktiviert Fuzzy-Matching (~0.8 Ähnlichkeit).
+ *
+ * Strategie (von präzise → tolerant, stoppt sobald Treffer da sind):
+ *   1. Phrase AND:  release:"<title>" AND artist:"<artist>"
+ *   2. Phrase OR:   release:"<title>" OR  artist:"<artist>"
+ *   3. Term AND:    release:(<title>) AND artist:(<artist>)
+ *   4. Term OR:     release:(<title>) OR  artist:(<artist>)
+ *   5. Fuzzy AND/OR als letzter Ausweg
+ *
+ * Die MusicBrainz-Suche ist von Haus aus case-insensitiv.
  */
 async function searchMusicBrainzMultiple(title, limit = 5, artist = '') {
-  // Sonderzeichen escapen, Kleinschreibung erzwingen
-  const safeTitle  = title.toLowerCase().replace(/["\\+\-!(){}\[\]^~*?:|&]/g, ' ').trim();
-  const safeArtist = artist.toLowerCase().replace(/["\\+\-!(){}\[\]^~*?:|&]/g, ' ').trim();
+  // Sonderzeichen escapen (für alle Stufen)
+  const escQuote = (s) => s.replace(/["\\]/g, '\\$&').trim();
+  const escTerm  = (s) => s.replace(/["\\+\-!(){}\[\]^~*?:|&]/g, ' ').trim();
 
-  // Fuzzy-Suche: jeder Term mit ~ für Tipp-Toleranz
-  const fuzzyTitle  = safeTitle.split(/\s+/).map(t => `${t}~`).join(' ');
-  const fuzzyArtist = safeArtist.split(/\s+/).map(t => `${t}~`).join(' ');
+  const tQ = escQuote(title);
+  const aQ = escQuote(artist);
+  const tT = escTerm(title);
+  const aT = escTerm(artist);
 
-  const query = safeArtist
-    ? `release:(${fuzzyTitle}) AND artist:(${fuzzyArtist})`
-    : `release:(${fuzzyTitle})`;
+  const queries = [];
 
-  const { data } = await http.get('https://musicbrainz.org/ws/2/release/', {
-    params: { query, fmt: 'json', limit },
-  });
+  // Stufe 1: Exaktes Phrase-Match beider Felder (AND)
+  if (artist) {
+    queries.push(`release:"${tQ}" AND artist:"${aQ}"`);
+  }
+  queries.push(`release:"${tQ}"`);
 
-  return (data.releases || []).map(mapRelease);
+  // Stufe 2: Exaktes Phrase-Match, OR-verknüpft (Titel ODER Künstler)
+  if (artist) {
+    queries.push(`release:"${tQ}" OR artist:"${aQ}"`);
+  }
+
+  // Stufe 3: Term-Match AND (alle Wörter müssen vorkommen, Reihenfolge egal)
+  if (artist) {
+    queries.push(`release:(${tT}) AND artist:(${aT})`);
+  }
+  queries.push(`release:(${tT})`);
+
+  // Stufe 4: Term-Match OR
+  if (artist) {
+    queries.push(`release:(${tT}) OR artist:(${aT})`);
+  }
+
+  // Stufe 5: Fuzzy (Tipp-Toleranz, nur als letzter Ausweg)
+  const fuzzyTitle  = tT.split(/\s+/).filter(Boolean).map(t => `${t}~`).join(' ');
+  const fuzzyArtist = aT.split(/\s+/).filter(Boolean).map(t => `${t}~`).join(' ');
+  if (artist) {
+    queries.push(`release:(${fuzzyTitle}) AND artist:(${fuzzyArtist})`);
+    queries.push(`release:(${fuzzyTitle}) OR artist:(${fuzzyArtist})`);
+  }
+  queries.push(`release:(${fuzzyTitle})`);
+
+  for (const query of queries) {
+    const { data } = await http.get('https://musicbrainz.org/ws/2/release/', {
+      params: { query, fmt: 'json', limit },
+    });
+    const results = (data.releases || []).map(mapRelease);
+    if (results.length > 0) return results;
+    // Rate-Limit einhalten: max. 1 Anfrage/Sekunde
+    await new Promise(r => setTimeout(r, 1100));
+  }
+  return [];
 }
 
 function mapRelease(release) {
   const artist = (release['artist-credit'] || [])
     .map((ac) => (typeof ac === 'string' ? ac : ac.artist?.name || ac.name || ''))
     .join('').trim();
+  const mbid = release.id || '';
   return {
     title: release.title || '',
     artist,
     year: (release.date || '').slice(0, 4),
-    mbid: release.id || '',
+    mbid,
+    score: release.score ?? null,
+    cover_url: mbid ? `https://coverartarchive.org/release/${mbid}/front-250` : '',
   };
 }
 

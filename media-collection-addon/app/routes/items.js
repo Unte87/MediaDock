@@ -14,7 +14,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database');
-const { searchMusicBrainz, fetchCoverUrl } = require('../musicbrainz');
+const { searchMusicBrainz, searchMusicBrainzMultiple, fetchCoverUrl } = require('../musicbrainz');
 
 const MEDIA_TYPES = ['vinyl'];
 
@@ -125,33 +125,50 @@ router.post('/:id/delete', (req, res, next) => {
   }
 });
 
-// ── Metadaten nachladen ───────────────────────────────────────────────────────
-// Ruft MusicBrainz mit Titel + Künstler des Eintrags auf und aktualisiert
-// Cover, MBID und Jahr. Nützlich für CSV-Imports ohne Live-Metadaten.
+// ── Metadaten-Vorschläge laden (Vorschau-Seite) ──────────────────────────────
+// GET -> MusicBrainz-Suche mit bis zu 5 Treffern -> Auswahl zeigen
 
-router.post('/:id/refresh', async (req, res, next) => {
+router.get('/:id/refresh', async (req, res, next) => {
   try {
     const id   = Number(req.params.id);
     const item = db.getItemById(id);
     if (!item) return res.status(404).render('error', { message: 'Item nicht gefunden.', base: res.app.locals.base });
 
-    const mbData = await searchMusicBrainz(item.title, item.artist || '');
-
-    if (mbData) {
-      db.updateItem(id, {
-        title:     mbData.title  || item.title,
-        artist:    mbData.artist || item.artist,
-        year:      mbData.year   || item.year,
-        cover_url: fetchCoverUrl(mbData.mbid),
-        mbid:      mbData.mbid,
-      });
+    let suggestions = [];
+    let searchError = null;
+    try {
+      suggestions = await searchMusicBrainzMultiple(item.title, 5, item.artist || '');
+    } catch (mbErr) {
+      searchError = 'MusicBrainz-Suche fehlgeschlagen: ' + mbErr.message;
     }
+
+    res.render('refresh', { item, suggestions, searchError });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── Ausgewählten Vorschlag übernehmen ─────────────────────────────────────────
+// POST -> ausgewählte Felder (title, artist, year, cover_url, mbid) speichern
+
+router.post('/:id/refresh/apply', (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    const item = db.getItemById(id);
+    if (!item) return res.status(404).render('error', { message: 'Item nicht gefunden.', base: res.app.locals.base });
+
+    const { title, artist, year, cover_url, mbid } = req.body;
+    db.updateItem(id, {
+      title:     title?.trim()     || item.title,
+      artist:    artist?.trim()    || item.artist,
+      year:      year?.trim()      || item.year,
+      cover_url: cover_url?.trim() || item.cover_url,
+      mbid:      mbid?.trim()      || item.mbid,
+    });
 
     res.redirect(`${res.app.locals.base}/items/${id}`);
   } catch (err) {
-    // Bei API-Fehler trotzdem zurück zur Detailseite
-    console.error('Metadaten-Refresh fehlgeschlagen:', err.message);
-    res.redirect(`${res.app.locals.base}/items/${req.params.id}`);
+    next(err);
   }
 });
 
