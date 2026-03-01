@@ -215,39 +215,58 @@
     applyView(currentView);
 
     // ── Coverflow-Karussell ────────────────────────────────────────────────
-    let carouselObserver = null;
-
     function visibleCards() {
       return grid ? [...grid.querySelectorAll('.item-card')].filter(c => c.style.display !== 'none') : [];
     }
 
     function scrollToCard(card) {
-      card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      // Karte mittig im Scroll-Container positionieren
+      const containerCenter = grid.getBoundingClientRect().left + grid.offsetWidth / 2;
+      const cardCenter      = card.getBoundingClientRect().left + card.offsetWidth / 2;
+      grid.scrollBy({ left: cardCenter - containerCenter, behavior: 'smooth' });
+    }
+
+    function getActiveCard() {
+      // Karte die am nächsten zur Mitte des Containers ist
+      const cards = visibleCards();
+      if (!cards.length) return null;
+      const containerCenter = grid.getBoundingClientRect().left + grid.offsetWidth / 2;
+      let best = cards[0], bestDist = Infinity;
+      cards.forEach(c => {
+        const dist = Math.abs(c.getBoundingClientRect().left + c.offsetWidth / 2 - containerCenter);
+        if (dist < bestDist) { bestDist = dist; best = c; }
+      });
+      return best;
+    }
+
+    function updateActiveCard() {
+      const active = getActiveCard();
+      visibleCards().forEach(c => c.classList.toggle('carousel-active', c === active));
     }
 
     function initCarousel() {
-      if (carouselObserver) carouselObserver.disconnect();
-      carouselObserver = new IntersectionObserver(entries => {
-        entries.forEach(e => {
-          e.target.classList.toggle('carousel-active', e.intersectionRatio >= 0.6);
-        });
-      }, { root: grid, threshold: 0.6 });
-      visibleCards().forEach(c => carouselObserver.observe(c));
+      updateActiveCard();
+      grid.addEventListener('scroll', () => {
+        clearTimeout(grid._scrollTimer);
+        grid._scrollTimer = setTimeout(updateActiveCard, 60);
+      }, { passive: true });
     }
 
     document.getElementById('carousel-prev')?.addEventListener('click', () => {
-      const cards   = visibleCards();
-      const active  = cards.findIndex(c => c.classList.contains('carousel-active'));
-      const target  = cards[Math.max(0, active - 1)];
+      const cards  = visibleCards();
+      const active = getActiveCard();
+      const idx    = cards.indexOf(active);
+      const target = cards[Math.max(0, idx - 1)];
       if (target) scrollToCard(target);
     });
     document.getElementById('carousel-next')?.addEventListener('click', () => {
-      const cards   = visibleCards();
-      const active  = cards.findIndex(c => c.classList.contains('carousel-active'));
-      const target  = cards[Math.min(cards.length - 1, active + 1)];
+      const cards  = visibleCards();
+      const active = getActiveCard();
+      const idx    = cards.indexOf(active);
+      const target = cards[Math.min(cards.length - 1, idx + 1)];
       if (target) scrollToCard(target);
     });
-    // Nicht-aktive Karten im Carousel: Klick scrollt zu ihnen, kein Detailaufruf
+    // Nicht-aktive Karten im Carousel: Klick scrollt zu ihnen
     document.getElementById('item-grid')?.addEventListener('click', e => {
       if (currentView !== 'carousel') return;
       const card = e.target.closest('.item-card');
@@ -255,7 +274,7 @@
       e.preventDefault();
       scrollToCard(card);
     });
-    // Pfeiltasten im Carousel
+    // Pfeiltasten
     document.addEventListener('keydown', e => {
       if (currentView !== 'carousel') return;
       if (e.key === 'ArrowLeft')  document.getElementById('carousel-prev')?.click();

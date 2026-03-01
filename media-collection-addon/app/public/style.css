@@ -283,19 +283,19 @@ img { max-width: 100%; display: block; }
   gap: 1.5rem;
   /* Zentrierung: linkes + rechtes Padding = (containerBreite - Kartenbreite)/2 */
   padding-inline: calc(50% - 130px);
-  /* genügend Höhe für Hover-Scale */
-  padding-top: 1.5rem;
-  padding-bottom: 2rem;
+  /* genügend Höhe für Scale-Effekt */
+  padding-top: 2rem;
+  padding-bottom: 2.5rem;
   /* Grid-Basis überschreiben */
   grid-template-columns: unset;
 }
 .item-grid.view-carousel::-webkit-scrollbar { display: none; }
 
-/* Jede Karte: fixe Größe, zunächst etwas verkleinert + transparent */
+/* Jede Karte: quadratisch wie ein Plattencover */
 .item-grid.view-carousel .item-card {
   flex: 0 0 260px;
   width: 260px;
-  height: 390px;
+  height: 260px;
   scroll-snap-align: center;
   position: relative;
   border: none;

@@ -179,15 +179,11 @@
       btn.disabled    = true;
       btn.textContent = '…';
       try {
-        const fd = new FormData();
-        fd.append('title',     title);
-        fd.append('artist',    artist);
-        fd.append('year',      year);
-        fd.append('cover_url', cover_url);
-        fd.append('mbid',      mbid);
-        fd.append('genre',     genre);
+        const params = new URLSearchParams({ title, artist, year, cover_url, mbid, genre });
         const resp = await fetch(`${BASE}/items/${itemId}/refresh/apply?json=1`, {
-          method: 'POST', body: fd,
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params.toString(),
         });
         const data = resp.ok ? await resp.json().catch(() => ({})) : {};
         if (resp.ok && data.ok) {
