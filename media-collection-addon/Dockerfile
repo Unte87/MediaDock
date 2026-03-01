@@ -23,8 +23,6 @@ COPY app/ ./
 # Expose ingress port
 EXPOSE 8099
 
-# Copy startup script
-COPY run.sh /run.sh
-RUN chmod +x /run.sh
-
-CMD ["/run.sh"]
+# Register as s6-overlay service so the base image's init system (PID 1) starts it
+COPY run.sh /etc/services.d/mediadock/run
+RUN chmod +x /etc/services.d/mediadock/run
