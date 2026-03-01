@@ -13,6 +13,5 @@
   "panel_title": "MediaDock",
   "map": ["data:rw"],
   "options": {},
-  "schema": {},
-  "image": "ghcr.io/YOUR_GITHUB_USERNAME/mediadock/{arch}"
+  "schema": {}
 }
