@@ -79,6 +79,7 @@ router.post('/add', async (req, res, next) => {
       owned:      owned    === 'on' ? 1 : 0,
       wishlist:   wishlist  === 'on' ? 1 : 0,
       rating:     Number(rating) || 0,
+      genre:      '',
       notes:      '',
       cover_url:  finalCover,
       mbid:       finalMbid,
@@ -107,10 +108,11 @@ router.get('/:id', (req, res, next) => {
 router.post('/:id', (req, res, next) => {
   try {
     const id = Number(req.params.id);
-    const { notes, owned, wishlist, title, artist, year, media_type, rating } = req.body;
+    const { notes, genre, owned, wishlist, title, artist, year, media_type, rating } = req.body;
 
     db.updateItem(id, {
       notes: notes ?? '',
+      genre: genre ?? '',
       owned: owned === 'on' ? 1 : 0,
       wishlist: wishlist === 'on' ? 1 : 0,
       rating: Number(rating) || 0,
@@ -169,13 +171,14 @@ router.post('/:id/refresh/apply', (req, res, next) => {
     const item = db.getItemById(id);
     if (!item) return res.status(404).render('error', { message: 'Item nicht gefunden.', base: res.app.locals.base });
 
-    const { title, artist, year, cover_url, mbid } = req.body;
+    const { title, artist, year, cover_url, mbid, genre } = req.body;
     db.updateItem(id, {
       title:     title?.trim()     || item.title,
       artist:    artist?.trim()    || item.artist,
       year:      year?.trim()      || item.year,
       cover_url: cover_url?.trim() || item.cover_url,
       mbid:      mbid?.trim()      || item.mbid,
+      genre:     genre?.trim()     || item.genre || '',
     });
 
     res.redirect(`${res.app.locals.base}/items/${id}`);

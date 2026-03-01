@@ -73,6 +73,10 @@
           <label for="m-artist">Künstler</label>
           <input id="m-artist" name="artist" type="text" placeholder="Künstler / Interpret" />
         </div>
+        <div class="form-group">
+          <label for="m-genre">Genre</label>
+          <input id="m-genre" name="genre" type="text" placeholder="z. B. Punk, Rock, Folk …" />
+        </div>
         <input type="hidden" name="media_type" value="vinyl" />
         <div class="form-group form-group--inline">
           <label class="checkbox-label"><input type="checkbox" name="owned"    /> Besitze ich</label>
@@ -116,6 +120,10 @@
             <% } %>
           </div>
           <input type="hidden" name="rating" id="cf-rating" value="0" />
+        </div>
+        <div class="form-group">
+          <label for="cf-genre">Genre</label>
+          <input id="cf-genre" name="genre" type="text" placeholder="z. B. Punk, Rock, Folk …" />
         </div>
         <div class="form-actions">
           <button type="button" class="btn btn-ghost" onclick="closeConfirm()">Abbrechen</button>

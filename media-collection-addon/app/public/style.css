@@ -458,6 +458,7 @@ img { max-width: 100%; display: block; }
 .result-title       { font-size: .88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .result-artist      { font-size: .78rem; color: var(--color-muted); }
 .result-year        { font-size: .72rem; color: var(--color-muted); }
+.result-genre       { font-size: .68rem; color: var(--color-muted); opacity: .75; font-style: italic; margin-top: 1px; }
 .result-add-icon    { font-size: 1.3rem; color: var(--color-primary); flex-shrink: 0; }
 
 .search-loading, .search-empty, .search-error {

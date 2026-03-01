@@ -59,7 +59,7 @@
       <div class="alert alert-error"><%= searchError %></div>
     <% } %>
 
-    <!-- ── Vorschläge ───────────────────────────────────────────────────── -->
+    <!-- ── Vorschläge ────────────────────────────────────── -->
     <% if (!searchError) { %>
       <h2 class="refresh-section-title">
         MusicBrainz-Vorschläge
@@ -85,6 +85,7 @@
               <input type="hidden" name="year"      value="<%= s.year      || '' %>" />
               <input type="hidden" name="cover_url" value="<%= s.cover_url || '' %>" />
               <input type="hidden" name="mbid"      value="<%= s.mbid      || '' %>" />
+              <input type="hidden" name="genre"     value="<%= s.genre     || '' %>" />
               <button type="submit" class="refresh-card-btn">
                 <div class="result-cover">
                   <% if (s.cover_url) { %>
@@ -111,6 +112,9 @@
                       </span>
                     <% } %>
                   </p>
+                  <% if (s.genre) { %>
+                    <p class="result-genre"><%= s.genre %></p>
+                  <% } %>
                 </div>
                 <span class="result-add-icon">✔</span>
               </button>

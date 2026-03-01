@@ -12,17 +12,61 @@
  *   Cover:          https://coverartarchive.org/release/<mbid>/front-250
  *   Cover (RG):     https://coverartarchive.org/release-group/<mbid>/front-250
  *
- * Rate-Limit: max. 1 Anfrage/Sekunde. User-Agent ist Pflicht.
+ * Rate-Limit: max. 1 Anfrage/Sekunde (MusicBrainz-Vorgabe).
+ * Alle Requests laufen durch einen globalen sequenziellen Queue mit 1.1s Abstand.
  */
 
 const axios = require('axios');
 
-const USER_AGENT = 'MediaDock/1.0.1 (home-assistant-addon)';
+const USER_AGENT = 'MediaDock/1.0.5 (home-assistant-addon)';
 
 const http = axios.create({
-  timeout: 10_000,
+  timeout: 15_000,
   headers: { 'User-Agent': USER_AGENT },
 });
+
+// ── Globaler Rate-Limiter ─────────────────────────────────────────────────────
+// Stellt sicher, dass nie mehr als 1 Anfrage/Sekunde an MusicBrainz geht,
+// egal wie viele gleichzeitige Nutzer/CSV-Imports aktiv sind.
+
+const RATE_MS = 1150; // etwas über 1s Sicherheitspuffer
+let lastRequestAt = 0;
+let requestQueue  = Promise.resolve();
+
+function rateLimitedGet(url, config) {
+  requestQueue = requestQueue.then(async () => {
+    const now  = Date.now();
+    const wait = RATE_MS - (now - lastRequestAt);
+    if (wait > 0) await sleep(wait);
+    lastRequestAt = Date.now();
+    return mbGet(url, config);
+  });
+  return requestQueue;
+}
+
+/** HTTP-GET mit bis zu 3 Retries bei ECONNRESET / 429 / 5xx */
+async function mbGet(url, config, attempt = 1) {
+  try {
+    return await http.get(url, config);
+  } catch (err) {
+    const status   = err.response?.status;
+    const retryable = err.code === 'ECONNRESET'
+      || err.code === 'ECONNABORTED'
+      || err.code === 'ETIMEDOUT'
+      || status === 429
+      || (status >= 500 && status < 600);
+
+    if (retryable && attempt < 4) {
+      const delay = attempt * 2000; // 2s, 4s, 6s
+      console.warn(`MusicBrainz ${err.code || status} – Retry ${attempt}/3 in ${delay}ms`);
+      await sleep(delay);
+      return mbGet(url, config, attempt + 1);
+    }
+    throw err;
+  }
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // ── Release-Suche ─────────────────────────────────────────────────────────────
 
@@ -42,10 +86,14 @@ async function searchMusicBrainz(title, artist = '') {
  *
  * Strategie (von präzise → tolerant, stoppt sobald Treffer da sind):
  *   1. Phrase AND:  release:"<title>" AND artist:"<artist>"
- *   2. Phrase OR:   release:"<title>" OR  artist:"<artist>"
- *   3. Term AND:    release:(<title>) AND artist:(<artist>)
- *   4. Term OR:     release:(<title>) OR  artist:(<artist>)
- *   5. Fuzzy AND/OR als letzter Ausweg
+ *   2. Phrase:      release:"<title>"
+ *   3. Term AND:    release:(<title>) AND artist:(<artist>)   ← trifft auch "Live at CBGB"
+ *   4. Term:        release:(<title>)
+ *   5. Fuzzy AND:   release:(title~) AND artist:(artist~)
+ *   6. Fuzzy:       release:(title~)
+ *
+ * OR-Stufen wurden bewusst entfernt: artist-Only-OR gibt alle Releases des Künstlers
+ * zurück und stoppt die Kaskade bevor die präzisere Term-Suche greift.
  *
  * Die MusicBrainz-Suche ist von Haus aus case-insensitiv.
  */
@@ -62,44 +110,34 @@ async function searchMusicBrainzMultiple(title, limit = 5, artist = '') {
   const queries = [];
 
   // Stufe 1: Exaktes Phrase-Match beider Felder (AND)
-  if (artist) {
-    queries.push(`release:"${tQ}" AND artist:"${aQ}"`);
-  }
+  if (artist) queries.push(`release:"${tQ}" AND artist:"${aQ}"`);
+
+  // Stufe 2: Exaktes Phrase-Match nur Titel
   queries.push(`release:"${tQ}"`);
 
-  // Stufe 2: Exaktes Phrase-Match, OR-verknüpft (Titel ODER Künstler)
-  if (artist) {
-    queries.push(`release:"${tQ}" OR artist:"${aQ}"`);
-  }
+  // Stufe 3: Term-Match AND – zuverlässigste Stufe für Titel mit Stoppwörtern wie
+  //          "Live at CBGB": Lucene/MusicBrainz prüft einzelne Terme, "at" wird
+  //          dabei nicht als Stoppwort gefiltert.
+  if (artist) queries.push(`release:(${tT}) AND artist:(${aT})`);
 
-  // Stufe 3: Term-Match AND (alle Wörter müssen vorkommen, Reihenfolge egal)
-  if (artist) {
-    queries.push(`release:(${tT}) AND artist:(${aT})`);
-  }
+  // Stufe 4: Term-Match nur Titel
   queries.push(`release:(${tT})`);
 
-  // Stufe 4: Term-Match OR
-  if (artist) {
-    queries.push(`release:(${tT}) OR artist:(${aT})`);
-  }
+  // Stufe 5: Fuzzy AND (Tipp-Toleranz) – kurze/gängige Wörter (<= 3 Zeichen) NICHT fuzzy,
+  //          damit "at", "the", "in" keine falschen Varianten erzeugen.
+  const fuzzyTitle  = tT.split(/\s+/).filter(Boolean).map(t => t.length > 3 ? `${t}~` : t).join(' ');
+  const fuzzyArtist = aT.split(/\s+/).filter(Boolean).map(t => t.length > 3 ? `${t}~` : t).join(' ');
+  if (artist) queries.push(`release:(${fuzzyTitle}) AND artist:(${fuzzyArtist})`);
 
-  // Stufe 5: Fuzzy (Tipp-Toleranz, nur als letzter Ausweg)
-  const fuzzyTitle  = tT.split(/\s+/).filter(Boolean).map(t => `${t}~`).join(' ');
-  const fuzzyArtist = aT.split(/\s+/).filter(Boolean).map(t => `${t}~`).join(' ');
-  if (artist) {
-    queries.push(`release:(${fuzzyTitle}) AND artist:(${fuzzyArtist})`);
-    queries.push(`release:(${fuzzyTitle}) OR artist:(${fuzzyArtist})`);
-  }
+  // Stufe 6: Fuzzy nur Titel (letzter Ausweg)
   queries.push(`release:(${fuzzyTitle})`);
 
   for (const query of queries) {
-    const { data } = await http.get('https://musicbrainz.org/ws/2/release/', {
-      params: { query, fmt: 'json', limit },
+    const { data } = await rateLimitedGet('https://musicbrainz.org/ws/2/release/', {
+      params: { query, fmt: 'json', limit, inc: 'tags' },
     });
     const results = (data.releases || []).map(mapRelease);
     if (results.length > 0) return results;
-    // Rate-Limit einhalten: max. 1 Anfrage/Sekunde
-    await new Promise(r => setTimeout(r, 1100));
   }
   return [];
 }
@@ -109,12 +147,20 @@ function mapRelease(release) {
     .map((ac) => (typeof ac === 'string' ? ac : ac.artist?.name || ac.name || ''))
     .join('').trim();
   const mbid = release.id || '';
+  // Tags nach Vote-Count sortieren, Top-5, kommagetrennt
+  const genre = (release.tags || [])
+    .sort((a, b) => (b.count || 0) - (a.count || 0))
+    .slice(0, 5)
+    .map(t => t.name)
+    .join(', ');
   return {
     title: release.title || '',
     artist,
     year: (release.date || '').slice(0, 4),
     mbid,
+    genre,
     score: release.score ?? null,
+    source: 'musicbrainz',
     cover_url: mbid ? `https://coverartarchive.org/release/${mbid}/front-250` : '',
   };
 }
@@ -126,7 +172,7 @@ function mapRelease(release) {
  * @returns {Promise<Array<{name, mbid, country, disambiguation}>>}
  */
 async function searchArtists(query, limit = 8) {
-  const { data } = await http.get('https://musicbrainz.org/ws/2/artist/', {
+  const { data } = await rateLimitedGet('https://musicbrainz.org/ws/2/artist/', {
     params: { query, fmt: 'json', limit },
   });
 
@@ -146,7 +192,7 @@ async function searchArtists(query, limit = 8) {
  * @returns {Promise<Array<{title, artist, year, mbid, type, cover_url}>>}
  */
 async function getReleaseGroupsByArtist(artistMbid, limit = 50) {
-  const { data } = await http.get('https://musicbrainz.org/ws/2/release-group/', {
+  const { data } = await rateLimitedGet('https://musicbrainz.org/ws/2/release-group/', {
     params: { artist: artistMbid, fmt: 'json', limit, inc: 'artist-credits' },
   });
 
