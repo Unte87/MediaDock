@@ -1,28 +1,19 @@
-ARG BUILD_FROM
-FROM $BUILD_FROM
+FROM node:20-alpine
 
-# Install Node.js (LTS) and build dependencies for better-sqlite3
-RUN apk add --no-cache \
-    nodejs \
-    npm \
-    python3 \
-    make \
-    g++ \
-    && rm -rf /var/cache/apk/*
+# Build dependencies for better-sqlite3 native compilation
+RUN apk add --no-cache python3 make g++
 
-# Copy application source
+# Copy and install Node.js dependencies
 WORKDIR /app
 COPY app/package.json ./
-
-# Install Node.js dependencies (includes native compilation for better-sqlite3)
-# npm install instead of npm ci because no lockfile is committed
 RUN npm install --omit=dev
 
 COPY app/ ./
 
-# Expose ingress port
+# Copy startup script
+COPY run.sh /run.sh
+RUN chmod +x /run.sh
+
 EXPOSE 8099
 
-# Register as s6-overlay service so the base image's init system (PID 1) starts it
-COPY run.sh /etc/services.d/mediadock/run
-RUN chmod +x /etc/services.d/mediadock/run
+CMD ["/run.sh"]
