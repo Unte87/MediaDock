@@ -540,6 +540,33 @@ img { max-width: 100%; display: block; }
   box-shadow: var(--shadow);
 }
 
+/* Cover-URL-Eingabe unterhalb des Vorschaubilds */
+.cover-url-form {
+  display: flex;
+  gap: .4rem;
+  margin-top: .55rem;
+}
+.cover-url-form input[type="url"] {
+  flex: 1;
+  min-width: 0;
+  padding: .3rem .6rem;
+  font-size: .78rem;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 6px);
+  color: var(--color-text);
+  transition: border-color .15s;
+}
+.cover-url-form input[type="url"]:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+.btn-sm {
+  padding: .3rem .65rem;
+  font-size: .78rem;
+  white-space: nowrap;
+}
+
 .detail-badges {
   display: flex;
   flex-wrap: wrap;
@@ -1036,3 +1063,70 @@ img { max-width: 100%; display: block; }
   background: color-mix(in srgb, var(--color-primary) 22%, transparent);
 }
 .bt-sug-apply:disabled { opacity: .5; cursor: default; }
+
+/* ─────────────────────────────────────────────────────────────────
+   Cover-Karussell (Detail-Seite)
+   ───────────────────────────────────────────────────────────────── */
+.cover-suggest-btn {
+  width: 100%;
+  margin-top: .4rem;
+  font-size: .78rem;
+}
+
+/* Scrollbarer Streifen */
+.cover-suggestions {
+  margin-top: .55rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+.cover-suggestions-track {
+  display: flex;
+  gap: .5rem;
+  padding-bottom: .35rem;
+  /* Kein Umbruch */
+  min-width: max-content;
+}
+
+/* Einzelne Cover-Schaltfläche */
+.cover-sug-item {
+  flex: 0 0 90px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: var(--color-surface-2);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm, 7px);
+  padding: 3px;
+  cursor: pointer;
+  transition: border-color .15s, transform .15s;
+  position: relative;
+}
+.cover-sug-item:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+}
+.cover-sug-item.active {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 30%, transparent);
+}
+.cover-sug-item img {
+  width: 84px;
+  height: 84px;
+  object-fit: cover;
+  border-radius: 4px;
+  display: block;
+}
+.cover-sug-label {
+  font-size: .65rem;
+  color: var(--color-muted);
+  text-align: center;
+}
+.cover-sug-none {
+  font-size: .8rem;
+  color: var(--color-muted);
+  padding: .5rem 0;
+}

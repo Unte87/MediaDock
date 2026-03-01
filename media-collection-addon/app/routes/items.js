@@ -95,8 +95,9 @@ router.post('/add', async (req, res, next) => {
 
 router.get('/bulk-refresh', (req, res, next) => {
   try {
-    const items = db.getAllItems({ media_type: 'all' });
-    res.render('bulk-refresh', { items });
+    const all   = db.getAllItems({ media_type: 'all' });
+    const items = all.filter(i => !i.cover_url);
+    res.render('bulk-refresh', { items, totalAll: all.length });
   } catch (err) {
     next(err);
   }

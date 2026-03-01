@@ -31,7 +31,11 @@
     <div class="bulk-header">
       <div>
         <h1 class="page-title" style="margin-bottom:.25rem">Massenanalyse</h1>
-        <p class="page-subtitle">MusicBrainz-Vorschläge für alle Einträge laden und direkt übernehmen.</p>
+        <p class="page-subtitle">
+          <strong><%= items.length %></strong> Einträge ohne Cover
+          <span style="color:var(--color-muted)">(<%= totalAll %> gesamt)</span>
+          &mdash; MusicBrainz-Vorschläge laden und Cover direkt übernehmen.
+        </p>
       </div>
       <div class="bulk-header-actions">
         <span class="bulk-progress" id="progress-label"></span>
@@ -54,6 +58,9 @@
           </tr>
         </thead>
         <tbody>
+          <% if (items.length === 0) { %>
+            <tr><td colspan="7" style="text-align:center;padding:2.5rem;color:var(--color-muted);">🎉 Alle Einträge haben bereits ein Cover.</td></tr>
+          <% } %>
           <% for (const item of items) { %>
             <tr
               class="bt-row"
