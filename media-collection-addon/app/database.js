@@ -122,7 +122,8 @@ function createItem(data) {
  */
 function updateItem(id, data) {
   const allowed = ['title', 'artist', 'year', 'media_type', 'owned', 'wishlist', 'rating', 'genre', 'notes', 'cover_url', 'mbid'];
-  const fields = Object.keys(data).filter((k) => allowed.includes(k));
+  // undefined-Werte ignorieren (kein Überschreiben mit NULL)
+  const fields = Object.keys(data).filter((k) => allowed.includes(k) && data[k] !== undefined);
 
   if (fields.length === 0) return getItemById(id);
 
@@ -155,4 +156,12 @@ function deleteItems(ids) {
   tx(ids.map(Number));
 }
 
-module.exports = { init, getDb, getAllItems, getItemById, createItem, updateItem, deleteItem, deleteItems };
+module.exports = { init, getDb, getAllItems, getItemById, createItem, updateItem, deleteItem, deleteItems, getKnownIdentifiers };
+
+/**
+ * Gibt alle bekannten MBIDs + Titel+Künstler zurück (für Duplikat-Erkennung im Frontend).
+ * @returns {Array<{mbid: string, title: string, artist: string}>}
+ */
+function getKnownIdentifiers() {
+  return db.prepare('SELECT mbid, title, artist FROM items').all();
+}

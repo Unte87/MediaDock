@@ -1,0 +1,331 @@
+<%
+  /*
+   * views/wishlist-add.ejs
+   * Künstler suchen → Diskografie → mehrere Alben zur Wunschliste hinzufügen.
+   * Bereits vorhandene Einträge (owned ODER wishlist) werden ausgeblendet.
+   */
+%>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wunschliste erweitern – MediaDock</title>
+  <link rel="stylesheet" href="<%= base %>/public/style.css" />
+  <style>
+    .wl-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 1rem;
+      margin-top: .5rem;
+    }
+    .wl-card {
+      position: relative;
+      border: 2px solid transparent;
+      border-radius: var(--radius, 8px);
+      background: var(--color-surface, #1e1e2e);
+      cursor: pointer;
+      overflow: hidden;
+      transition: border-color .15s, box-shadow .15s;
+      user-select: none;
+    }
+    .wl-card:hover { border-color: var(--color-primary, #7c6af7); }
+    .wl-card.selected {
+      border-color: var(--color-primary, #7c6af7);
+      box-shadow: 0 0 0 3px rgba(124,106,247,.35);
+    }
+    .wl-card img,
+    .wl-card .cover-placeholder {
+      width: 100%; aspect-ratio: 1; object-fit: cover; display: block;
+    }
+    .wl-card .cover-placeholder {
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; background: var(--color-muted, #2a2a3e);
+    }
+    .wl-card-info   { padding: .45rem .5rem .5rem; }
+    .wl-card-title  { font-size: .78rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .wl-card-artist { font-size: .72rem; color: var(--color-text-muted, #888); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .wl-card-year   { font-size: .68rem; color: var(--color-text-muted, #888); margin-top: .15rem; }
+    .wl-check {
+      position: absolute; top: 6px; right: 6px;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: var(--color-primary, #7c6af7);
+      display: none; align-items: center; justify-content: center;
+      font-size: .7rem; color: #fff; font-weight: 700;
+    }
+    .wl-card.selected .wl-check { display: flex; }
+    .wl-sticky {
+      position: sticky; top: 0; z-index: 10;
+      background: var(--color-bg, #12121c);
+      padding: .6rem 0;
+      display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
+      border-bottom: 1px solid var(--color-border, #2a2a3e);
+      margin-bottom: .75rem;
+    }
+    .wl-count { font-size: .85rem; color: var(--color-text-muted, #888); flex: 1; }
+    .disc-type-group  { margin-top: 1.5rem; }
+    .disc-type-label  { font-size: .75rem; text-transform: uppercase; letter-spacing: .07em; color: var(--color-text-muted, #888); margin-bottom: .4rem; }
+    .wl-toast {
+      position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+      background: var(--color-primary, #7c6af7); color: #fff;
+      padding: .6rem 1.4rem; border-radius: 99px; font-size: .9rem;
+      opacity: 0; transition: opacity .3s; pointer-events: none; white-space: nowrap;
+    }
+    .wl-toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <a class="logo" href="<%= base %>/">
+      <span class="logo-icon">🎵</span>
+      <span class="logo-text">MediaDock</span>
+    </a>
+    <nav>
+      <a href="<%= base %>/">Sammlung</a>
+      <a href="<%= base %>/csv">CSV-Import</a>
+      <a href="<%= base %>/items/bulk-refresh">Massenanalyse</a>
+      <a href="<%= base %>/items/wishlist-add" class="btn btn-secondary">♥ Wunschliste erweitern</a>
+      <a href="<%= base %>/items/add" class="btn btn-primary">+ Hinzufügen</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <a href="<%= base %>/" class="back-link">&larr; Zur Sammlung</a>
+    <h1 class="page-title">Wunschliste erweitern</h1>
+    <p style="color:var(--color-text-muted,#888);margin-top:-.5rem;margin-bottom:1.25rem;">
+      Künstler suchen → Alben auswählen → zur Wunschliste hinzufügen.<br>
+      Bereits vorhandene oder gewünschte Einträge werden nicht angezeigt.
+    </p>
+
+    <!-- Künstler-Suche -->
+    <div class="search-bar">
+      <input id="art-query" type="text" placeholder="Künstlername  (z. B. Foo Fighters)" />
+      <button id="art-search-btn" class="btn btn-primary">Suchen</button>
+    </div>
+    <div id="art-results" class="search-results" style="margin-top:.75rem"></div>
+
+    <!-- Diskografie -->
+    <div id="disc-section" style="display:none; margin-top:1rem;">
+      <div class="wl-sticky">
+        <span class="wl-count" id="wl-count">Keine Alben ausgewählt</span>
+        <button id="wl-select-all"   class="btn btn-ghost btn-sm">Alle wählen</button>
+        <button id="wl-deselect-all" class="btn btn-ghost btn-sm">Alle abwählen</button>
+        <button id="wl-add-btn"      class="btn btn-primary"      disabled>♥ Zur Wunschliste</button>
+      </div>
+      <div id="disc-results"></div>
+    </div>
+  </main>
+
+  <div class="wl-toast" id="wl-toast"></div>
+
+  <footer class="site-footer">
+    <small>MediaDock &mdash; persönliche Mediensammlung</small>
+  </footer>
+
+  <script>
+    const BASE = '<%= base %>';
+
+    function escHtml(s) {
+      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function norm(s) { return String(s || '').toLowerCase().replace(/\s+/g,' ').trim(); }
+
+    // ── Bekannte Einträge laden ───────────────────────────────────────────────
+    let knownMbids   = new Set();
+    let knownEntries = [];
+
+    async function loadKnown() {
+      try {
+        const res  = await fetch(`${BASE}/api/items/known`);
+        const data = await res.json();
+        knownMbids   = new Set(data.filter(d => d.mbid).map(d => d.mbid));
+        knownEntries = data.map(d => ({ title: norm(d.title), artist: norm(d.artist) }));
+      } catch { /* ignore */ }
+    }
+    loadKnown();
+
+    function isKnown(rg) {
+      if (rg.mbid && knownMbids.has(rg.mbid)) return true;
+      const t = norm(rg.title), a = norm(rg.artist);
+      return knownEntries.some(e => e.title === t && e.artist === a);
+    }
+
+    // ── Auswahl-State ─────────────────────────────────────────────────────────
+    const selected = new Map();
+    let   allCards = [];
+
+    function selKey(rg) { return rg.mbid || (norm(rg.artist) + '§' + norm(rg.title)); }
+
+    function toggleCard(card, rg) {
+      const key = selKey(rg);
+      if (selected.has(key)) { selected.delete(key); card.classList.remove('selected'); }
+      else                   { selected.set(key, rg); card.classList.add('selected');   }
+      updateToolbar();
+    }
+
+    function updateToolbar() {
+      const n = selected.size;
+      document.getElementById('wl-count').textContent =
+        n === 0 ? 'Keine Alben ausgewählt' : `${n} Album${n === 1 ? '' : 's'} ausgewählt`;
+      document.getElementById('wl-add-btn').disabled = (n === 0);
+    }
+
+    // ── Karte bauen ───────────────────────────────────────────────────────────
+    function makeCard(rg) {
+      const card = document.createElement('div');
+      card.className = 'wl-card';
+
+      const primary  = rg.cover_url    || rg.rg_cover_url || '';
+      const fallback = rg.rg_cover_url || '';
+      const imgHtml = primary
+        ? `<img src="${escHtml(primary)}" alt="" loading="lazy"
+             onerror="if(this.dataset.fb!=='1'&&this.dataset.fallback){this.dataset.fb='1';this.src=this.dataset.fallback;}else{this.style.display='none';this.nextElementSibling.style.display='flex';}"
+             data-fallback="${escHtml(fallback)}"
+           /><div class="cover-placeholder" style="display:none"><span>🎵</span></div>`
+        : `<div class="cover-placeholder"><span>🎵</span></div>`;
+
+      card.innerHTML = `
+        ${imgHtml}
+        <div class="wl-card-info">
+          <div class="wl-card-title">${escHtml(rg.title)}</div>
+          <div class="wl-card-artist">${escHtml(rg.artist)}</div>
+          <div class="wl-card-year">${escHtml(rg.year)}${rg.type && rg.type !== 'Album' ? ' · ' + escHtml(rg.type) : ''}</div>
+        </div>
+        <div class="wl-check">✓</div>`;
+
+      card.addEventListener('click', () => toggleCard(card, rg));
+      return card;
+    }
+
+    // ── Diskografie rendern ───────────────────────────────────────────────────
+    function renderDiscography(releases) {
+      allCards = [];
+      const discEl = document.getElementById('disc-results');
+      discEl.innerHTML = '';
+
+      const groups = {};
+      for (const rg of releases) {
+        if (isKnown(rg)) continue;
+        const type = rg.type || 'Album';
+        if (!groups[type]) groups[type] = [];
+        groups[type].push(rg);
+      }
+
+      const order = ['Album', 'EP', 'Single', 'Other'];
+      const types = [...new Set([...order, ...Object.keys(groups)])].filter(t => groups[t]?.length);
+
+      if (!types.length) {
+        discEl.innerHTML = '<p class="search-empty">Alle Releases sind bereits in deiner Sammlung oder Wunschliste.</p>';
+        document.getElementById('disc-section').style.display = '';
+        return;
+      }
+
+      for (const type of types) {
+        const section = document.createElement('div');
+        section.className = 'disc-type-group';
+        section.innerHTML = `<div class="disc-type-label">${escHtml(type)}s</div>`;
+        const grid = document.createElement('div');
+        grid.className = 'wl-grid';
+        for (const rg of groups[type]) {
+          const card = makeCard(rg);
+          allCards.push({ card, rg });
+          grid.appendChild(card);
+        }
+        section.appendChild(grid);
+        discEl.appendChild(section);
+      }
+      document.getElementById('disc-section').style.display = '';
+      document.getElementById('disc-section').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // ── Alle / Keine ──────────────────────────────────────────────────────────
+    document.getElementById('wl-select-all').addEventListener('click', () => {
+      allCards.forEach(({ card, rg }) => { selected.set(selKey(rg), rg); card.classList.add('selected'); });
+      updateToolbar();
+    });
+    document.getElementById('wl-deselect-all').addEventListener('click', () => {
+      selected.clear();
+      allCards.forEach(({ card }) => card.classList.remove('selected'));
+      updateToolbar();
+    });
+
+    // ── Speichern ─────────────────────────────────────────────────────────────
+    document.getElementById('wl-add-btn').addEventListener('click', async () => {
+      const btn = document.getElementById('wl-add-btn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Speichere…';
+      const items = [...selected.values()];
+      try {
+        const res  = await fetch(`${BASE}/items/wishlist-add`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          const keys = new Set([...selected.keys()]);
+          allCards = allCards.filter(({ card, rg }) => {
+            if (keys.has(selKey(rg))) { card.remove(); return false; }
+            return true;
+          });
+          const n = items.length;
+          selected.clear();
+          updateToolbar();
+          // Leere Gruppen entfernen
+          document.querySelectorAll('.disc-type-group').forEach(g => { if (!g.querySelector('.wl-card')) g.remove(); });
+          showToast(`${n} Album${n === 1 ? '' : 's'} zur Wunschliste hinzugefügt ♥`);
+          await loadKnown();
+        }
+      } catch { showToast('Fehler beim Speichern.'); }
+      btn.textContent = '♥ Zur Wunschliste';
+      updateToolbar();
+    });
+
+    // ── Toast ─────────────────────────────────────────────────────────────────
+    function showToast(msg) {
+      const t = document.getElementById('wl-toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // ── Künstler suchen ───────────────────────────────────────────────────────
+    async function searchArtists() {
+      const q = document.getElementById('art-query').value.trim();
+      if (!q) return;
+      const el = document.getElementById('art-results');
+      el.innerHTML = '<p class="search-loading">Suche läuft…</p>';
+      document.getElementById('disc-section').style.display = 'none';
+      selected.clear(); allCards = []; updateToolbar();
+      try {
+        const res  = await fetch(`${BASE}/api/artists?q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        if (!data.length) { el.innerHTML = '<p class="search-empty">Keine Künstler gefunden.</p>'; return; }
+        el.innerHTML = data.map(a => `
+          <div class="artist-card" onclick="loadDisc('${escHtml(a.mbid)}','${escHtml(a.name).replace(/'/g, '&#39;')}')">
+            <span class="artist-name">${escHtml(a.name)}</span>
+            ${a.disambiguation ? `<span class="artist-dis">${escHtml(a.disambiguation)}</span>` : ''}
+            ${a.country        ? `<span class="artist-country">${escHtml(a.country)}</span>`        : ''}
+          </div>`).join('');
+      } catch { el.innerHTML = '<p class="search-error">Suche fehlgeschlagen.</p>'; }
+    }
+
+    async function loadDisc(mbid, name) {
+      await loadKnown();
+      selected.clear(); allCards = []; updateToolbar();
+      const el = document.getElementById('disc-results');
+      document.getElementById('disc-section').style.display = '';
+      el.innerHTML = `<p class="search-loading">Lade Diskografie von ${escHtml(name)}…</p>`;
+      document.getElementById('disc-section').scrollIntoView({ behavior: 'smooth' });
+      try {
+        const res  = await fetch(`${BASE}/api/artists/${mbid}/releases`);
+        const data = await res.json();
+        renderDiscography(data);
+      } catch { el.innerHTML = '<p class="search-error">Diskografie konnte nicht geladen werden.</p>'; }
+    }
+
+    document.getElementById('art-search-btn').addEventListener('click', searchArtists);
+    document.getElementById('art-query').addEventListener('keydown', e => e.key === 'Enter' && searchArtists());
+  </script>
+</body>
+</html>

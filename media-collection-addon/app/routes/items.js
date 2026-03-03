@@ -30,6 +30,39 @@ router.post('/bulk-delete', (req, res, next) => {
   }
 });
 
+// ── Wishlist-Picker ───────────────────────────────────────────────────────────
+
+router.get('/wishlist-add', (req, res) => {
+  res.render('wishlist-add');
+});
+
+router.post('/wishlist-add', async (req, res, next) => {
+  try {
+    let items = req.body.items;
+    if (!items) return res.status(400).json({ error: 'Keine Items übergeben.' });
+    if (!Array.isArray(items)) items = [items];
+
+    for (const raw of items) {
+      const item = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      if (!item.title) continue;
+      db.createItem({
+        title:     item.title     || '',
+        artist:    item.artist    || '',
+        year:      item.year      || '',
+        media_type: 'vinyl',
+        owned:     0,
+        wishlist:  1,
+        cover_url: item.cover_url || item.rg_cover_url || '',
+        mbid:      item.mbid      || '',
+        genre:     item.genre     || '',
+      });
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ── Add item ──────────────────────────────────────────────────────────────────
 
 router.get('/add', (req, res) => {
@@ -120,7 +153,7 @@ router.get('/:id', (req, res, next) => {
 router.post('/:id', (req, res, next) => {
   try {
     const id = Number(req.params.id);
-    const { notes, genre, owned, wishlist, title, artist, year, media_type, rating } = req.body;
+    const { notes, genre, owned, wishlist, title, artist, year, media_type, rating, cover_url } = req.body;
 
     db.updateItem(id, {
       notes: notes ?? '',
@@ -132,6 +165,7 @@ router.post('/:id', (req, res, next) => {
       artist: artist?.trim() || undefined,
       year: year?.trim() || undefined,
       media_type: media_type || undefined,
+      cover_url: cover_url?.trim() ?? undefined,
     });
 
     res.redirect(`${res.app.locals.base}/items/${id}`);

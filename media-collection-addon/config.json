@@ -1,9 +1,9 @@
 {
   "name": "MediaDock",
   "slug": "mediadock",
-  "version": "1.0.13",
-  "description": "Self-hosted web app to manage your personal media collection: vinyl, CDs, games, Blu-rays and more.",
-  "url": "https://github.com/YOUR_GITHUB_USERNAME/MediaDock",
+  "version": "1.0.15",
+  "description": "Self-hosted media collection manager for vinyl, CDs, games and more. Built as a Vibe Coding experiment with GitHub Copilot – no line written by hand.",
+  "url": "https://github.com/Unte87/MediaDock",
   "arch": ["aarch64", "amd64", "armhf", "armv7", "i386"],
   "startup": "services",
   "boot": "auto",
