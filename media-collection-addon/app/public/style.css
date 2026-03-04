@@ -1189,3 +1189,101 @@ img { max-width: 100%; display: block; }
   color: var(--color-muted);
   padding: .5rem 0;
 }
+
+/* ── Responsive / Mobile ────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+
+  /* Header */
+  .site-header {
+    padding: .55rem .9rem;
+    flex-wrap: wrap;
+    gap: .5rem;
+  }
+  .logo-text   { font-size: 1rem; }
+  .site-header nav { gap: .65rem; }
+  .site-header nav a { font-size: .82rem; }
+
+  /* Container */
+  .container {
+    padding: 1rem .9rem;
+  }
+
+  /* Page title */
+  .page-title { font-size: 1.2rem; }
+
+  /* Toolbar – Suche nimmt volle Breite, Filter darunter */
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: .5rem;
+    padding: .65rem .75rem;
+  }
+  .toolbar-search { flex: 1 1 100%; min-width: unset; }
+  .toolbar-right  {
+    flex-wrap: wrap;
+    margin-left: 0;
+    gap: .5rem;
+  }
+  .filter-group { flex: 1 1 auto; }
+  .filter-group select { width: 100%; }
+  .filter-count { width: 100%; text-align: right; }
+
+  /* Item-Grid – zwei Spalten auf kleinen Bildschirmen */
+  .item-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: .75rem;
+  }
+
+  /* Listenansicht auf Mobile etwas kompakter */
+  .item-grid.view-list .item-cover { flex: 0 0 48px; width: 48px; height: 48px; }
+  .item-grid.view-list .item-title { font-size: .82rem; }
+
+  /* Carousel-Pfeile nicht abschneiden */
+  .carousel-arrow--prev { left: 0; }
+  .carousel-arrow--next { right: 0; }
+  .item-grid.view-carousel {
+    padding-inline: calc(50% - 120px);
+  }
+
+  /* Forms */
+  .form-card { padding: 1rem .9rem; }
+  .form-group--half {
+    flex-direction: column;
+    gap: .85rem;
+  }
+  .form-actions { flex-direction: column; }
+  .form-actions .btn { width: 100%; justify-content: center; }
+
+  /* Detail layout – already handled at 700px, extra tweaks */
+  .detail-layout { gap: 1rem; }
+
+  /* Tabs */
+  .tab-btn { padding: .45rem .65rem; font-size: .82rem; }
+
+  /* Bulk-Action-Bar */
+  .bulk-action-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: .6rem;
+    padding: .75rem 1rem;
+  }
+  .bulk-actions {
+    margin-left: 0;
+    justify-content: flex-end;
+  }
+
+  /* Buttons allgemein */
+  .btn { font-size: .82rem; padding: .45rem .85rem; }
+  .btn-sm { font-size: .75rem; padding: .28rem .6rem; }
+
+  /* Confirm-Vorschau */
+  .confirm-preview { flex-direction: column; align-items: flex-start; }
+
+  /* Refresh-Card */
+  .refresh-current-card { flex-direction: column; }
+  .refresh-results { grid-template-columns: 1fr 1fr; }
+
+  /* Empty-State */
+  .empty-state { padding: 2.5rem .5rem; }
+  .empty-state h1 { font-size: 1.5rem; }
+}
