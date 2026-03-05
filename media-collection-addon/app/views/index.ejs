@@ -272,14 +272,16 @@
       const cards  = visibleCards();
       const active = getActiveCard();
       const idx    = cards.indexOf(active);
-      const target = cards[Math.max(0, idx - 1)];
+      // Zyklisch: springe zum Ende wenn am Anfang
+      const target = cards[idx <= 0 ? cards.length - 1 : idx - 1];
       if (target) scrollToCard(target);
     });
     document.getElementById('carousel-next')?.addEventListener('click', () => {
       const cards  = visibleCards();
       const active = getActiveCard();
       const idx    = cards.indexOf(active);
-      const target = cards[Math.min(cards.length - 1, idx + 1)];
+      // Zyklisch: springe zum Anfang wenn am Ende
+      const target = cards[idx >= cards.length - 1 ? 0 : idx + 1];
       if (target) scrollToCard(target);
     });
     // Nicht-aktive Karten im Carousel: Klick scrollt zu ihnen
