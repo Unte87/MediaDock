@@ -1,8 +1,7 @@
 # VinylVault – Home Assistant Add-on
 
-Self-hosted personal media collection manager. Track vinyl records, CDs, games,
-Blu-rays, DVDs, books and more – with automatic metadata from MusicBrainz and
-cover art from the Cover Art Archive.
+Self-hosted vinyl record collection manager. Track your vinyl collection with
+automatic metadata from MusicBrainz and cover art from the Cover Art Archive.
 
 ## How to use
 
