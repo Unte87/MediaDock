@@ -480,6 +480,7 @@ img { max-width: 100%; display: block; }
   text-decoration: none; z-index: 3; white-space: nowrap;
   opacity: 0; transition: opacity .3s;
 }
+.item-grid.view-carousel .shop-link--amazon { top: 1.95rem; }
 .item-grid.view-carousel .item-card.carousel-active .gh-link { opacity: 1; }
 .item-grid.view-carousel .gh-link:hover { background: rgba(0,0,0,.8); color: #fff; }
 .item-grid.view-carousel .item-checkbox-wrap { top: .45rem; left: .45rem; z-index: 3; }
@@ -923,6 +924,7 @@ img { max-width: 100%; display: block; }
   transition: opacity var(--transition);
 }
 .gh-link:hover         { opacity: .75; }
+.shop-link--amazon     { color: color-mix(in srgb, var(--color-primary) 82%, #fff); }
 .gh-link--detail       { text-align: left; border-top: none; margin-top: .5rem; font-size: .85rem; }
 
 /* ── CSV-Import ────────────────────────────────────────────────────── */

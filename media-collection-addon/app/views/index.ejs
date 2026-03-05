@@ -79,14 +79,6 @@
         </select>
       </div>
 
-      <!-- Gruppierung -->
-      <div class="filter-group">
-        <label class="checkbox-label">
-          <input type="checkbox" id="group-artist" />
-          Nach Künstler
-        </label>
-      </div>
-
       <!-- Ansicht + Zähler -->
       <div class="toolbar-right">
         <span class="filter-count" id="item-count"><%= items.length %> Platten</span>
@@ -168,12 +160,19 @@
             </div>
             <% if (item.wishlist) { %>
               <a
-                class="gh-link"
+                class="gh-link shop-link shop-link--gh"
                 href="https://greenhell.de/search/?qs=<%= encodeURIComponent((item.artist ? item.artist + ' ' : '') + item.title).replace(/%20/g, '+') %>"
                 target="_blank"
                 rel="noopener"
                 title="Bei Green Hell Records suchen"
               >Bei&nbsp;Green&nbsp;Hell&nbsp;suchen ↗</a>
+              <a
+                class="gh-link shop-link shop-link--amazon"
+                href="https://www.amazon.de/s?k=<%= encodeURIComponent((item.artist ? item.artist + ' ' : '') + item.title) %>"
+                target="_blank"
+                rel="noopener"
+                title="Bei Amazon suchen"
+              >Bei&nbsp;Amazon&nbsp;suchen ↗</a>
             <% } %>
           </li>
         <% } %>
@@ -226,12 +225,10 @@
       const wrap = document.getElementById('carousel-wrap');
       wrap?.classList.toggle('is-carousel', v === 'carousel');
       if (v === 'carousel') initCarousel();
-      toggleGroupingAvailability();
       applyFiltersAndSort();
     }
 
     VIEWS.forEach(v => document.getElementById('view-' + v)?.addEventListener('click', () => applyView(v)));
-    applyView(currentView);
 
     // ── Coverflow-Karussell ────────────────────────────────────────────────
     function visibleCards() {
@@ -304,12 +301,10 @@
     const searchInput  = document.getElementById('search-input');
     const statusFilter = document.getElementById('status-filter');
     const sortSelect   = document.getElementById('sort-select');
-    const groupArtist  = document.getElementById('group-artist');
 
     // Gespeicherte Einstellungen laden
-    sortSelect.value    = localStorage.getItem('md-sort')   || 'added-desc';
-    statusFilter.value  = localStorage.getItem('md-status') || 'all';
-    groupArtist.checked = localStorage.getItem('md-group-artist') === 'true';
+    sortSelect.value   = localStorage.getItem('md-sort')   || 'added-desc';
+    statusFilter.value = localStorage.getItem('md-status') || 'all';
 
     function allCards() { return grid ? [...grid.querySelectorAll('.item-card')] : []; }
 
@@ -317,13 +312,32 @@
       grid?.querySelectorAll('.item-group-header').forEach(el => el.remove());
     }
 
-    function renderGrouped(visible, hidden) {
+    function renderGrouped(visible, hidden, mode) {
       clearGroupHeaders();
       const frag = document.createDocumentFragment();
       let lastKey = null;
       visible.forEach(card => {
-        const key = (card.dataset.artist || '').trim();
-        const label = (card.dataset.artistName || '').trim() || 'Unbekannter Künstler';
+        let key = '';
+        let label = '';
+        if (mode === 'artist') {
+          key = (card.dataset.artist || '').trim() || '~unknown';
+          label = (card.dataset.artistName || '').trim() || 'Unbekannter Künstler';
+        } else if (mode === 'title-letter') {
+          const rawTitle = (card.dataset.title || '').trim();
+          const firstChar = rawTitle ? rawTitle[0] : '#';
+          const upper = firstChar.toLocaleUpperCase('de-DE');
+          key = /[A-ZÄÖÜ0-9]/.test(upper) ? upper : '#';
+          label = key;
+        } else if (mode === 'year') {
+          const year = String(card.dataset.year || '').trim();
+          key = year && year !== '0' ? year : '~unknown-year';
+          label = year && year !== '0' ? year : 'Unbekanntes Jahr';
+        } else if (mode === 'rating') {
+          const ratingNum = Number(card.dataset.rating || 0);
+          const clamped = Number.isFinite(ratingNum) ? Math.max(0, Math.min(5, ratingNum)) : 0;
+          key = String(clamped);
+          label = clamped > 0 ? `${clamped} ★` : 'Unbewertet';
+        }
         if (key !== lastKey) {
           const header = document.createElement('li');
           header.className = 'item-group-header';
@@ -337,29 +351,22 @@
       hidden.forEach(c => grid.appendChild(c));
     }
 
-    function toggleGroupingAvailability() {
-      if (!groupArtist) return;
-      const disable = currentView === 'carousel';
-      groupArtist.disabled = disable;
-      if (disable && groupArtist.checked) {
-        groupArtist.checked = false;
-        localStorage.setItem('md-group-artist', 'false');
-      }
+    function groupModeForSort(sort) {
+      if (sort === 'artist-asc') return 'artist';
+      if (sort === 'title-asc' || sort === 'title-desc') return 'title-letter';
+      if (sort === 'year-asc' || sort === 'year-desc') return 'year';
+      if (sort === 'rating-desc') return 'rating';
+      return null;
     }
 
     function applyFiltersAndSort() {
       const q      = (searchInput?.value || '').toLowerCase().trim();
       const status = statusFilter.value;
-      let sort     = sortSelect.value;
-      const group  = groupArtist?.checked && currentView !== 'carousel';
-      if (group && sort !== 'artist-asc') {
-        sort = 'artist-asc';
-        sortSelect.value = sort;
-      }
+      const sort   = sortSelect.value;
+      const groupMode = currentView === 'carousel' ? null : groupModeForSort(sort);
 
       localStorage.setItem('md-sort',   sort);
       localStorage.setItem('md-status', status);
-      localStorage.setItem('md-group-artist', groupArtist?.checked ? 'true' : 'false');
 
       let cards = allCards();
 
@@ -397,7 +404,7 @@
         }
       });
       const hidden = cards.filter(c => c.style.display === 'none');
-      if (group) renderGrouped(visible, hidden);
+      if (groupMode) renderGrouped(visible, hidden, groupMode);
       else {
         clearGroupHeaders();
         visible.forEach(c => grid.appendChild(c));
@@ -412,10 +419,8 @@
     });
     statusFilter?.addEventListener('change', applyFiltersAndSort);
     sortSelect?.addEventListener('change', applyFiltersAndSort);
-    groupArtist?.addEventListener('change', applyFiltersAndSort);
 
-    toggleGroupingAvailability();
-    applyFiltersAndSort();
+    applyView(currentView);
 
     // ── Mehrfachauswahl ────────────────────────────────────────────────────
     function checkboxes() { return grid ? [...grid.querySelectorAll('.item-checkbox')] : []; }
@@ -443,7 +448,7 @@
       if (!selectMode) return;
       const card = e.target.closest('.item-card');
       if (!card) return;
-      if (!e.target.closest('.item-checkbox-wrap') && !e.target.closest('.gh-link')) {
+      if (!e.target.closest('.item-checkbox-wrap') && !e.target.closest('.shop-link')) {
         e.preventDefault();
         const cb = card.querySelector('.item-checkbox');
         cb.checked = !cb.checked;

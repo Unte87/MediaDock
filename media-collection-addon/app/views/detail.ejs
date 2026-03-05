@@ -79,11 +79,17 @@
         </div>
         <% if (item.wishlist) { %>
           <a
-            class="gh-link gh-link--detail"
+            class="gh-link gh-link--detail shop-link shop-link--gh"
             href="https://greenhell.de/search/?qs=<%= encodeURIComponent((item.artist ? item.artist + ' ' : '') + item.title).replace(/%20/g, '+') %>"
             target="_blank"
             rel="noopener"
           >Bei Green Hell Records suchen ↗</a>
+          <a
+            class="gh-link gh-link--detail shop-link shop-link--amazon"
+            href="https://www.amazon.de/s?k=<%= encodeURIComponent((item.artist ? item.artist + ' ' : '') + item.title) %>"
+            target="_blank"
+            rel="noopener"
+          >Bei Amazon suchen ↗</a>
         <% } %>
       </div>
 
