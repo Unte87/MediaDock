@@ -18,13 +18,22 @@
       <span class="logo-icon">🎵</span>
       <span class="logo-text">MediaDock</span>
     </a>
-    <nav>
-      <a href="<%= base %>/">Sammlung</a>
-      <a href="<%= base %>/csv">CSV-Import</a>
-      <a href="<%= base %>/items/bulk-refresh">Massenanalyse</a>
-      <a href="<%= base %>/items/wishlist-add" class="btn btn-secondary">♥ Wunschliste</a>
-      <a href="<%= base %>/items/add" class="btn btn-primary">+ Hinzufügen</a>
-    </nav>
+    <div class="nav-wrap">
+      <nav class="nav-primary">
+        <a class="nav-link-collection" href="<%= base %>/">Sammlung</a>
+        <a class="nav-link-desktop" href="<%= base %>/csv">CSV-Import</a>
+        <a class="nav-link-desktop" href="<%= base %>/items/bulk-refresh">Massenanalyse</a>
+        <a href="<%= base %>/items/wishlist-add" class="btn btn-secondary"><span class="btn-icon">♥</span><span class="btn-label">Wunschliste</span></a>
+        <a href="<%= base %>/items/add" class="btn btn-primary"><span class="btn-icon">+</span><span class="btn-label">Hinzufügen</span></a>
+      </nav>
+      <details class="nav-more">
+        <summary class="nav-more-btn" aria-label="Menue">Menu</summary>
+        <div class="nav-more-panel">
+          <a href="<%= base %>/csv">CSV-Import</a>
+          <a href="<%= base %>/items/bulk-refresh">Massenanalyse</a>
+        </div>
+      </details>
+    </div>
   </header>
 
   <main class="container">

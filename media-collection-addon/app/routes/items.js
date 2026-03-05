@@ -118,7 +118,7 @@ router.post('/add', async (req, res, next) => {
       mbid:       finalMbid,
     });
 
-    res.redirect(`${res.app.locals.base}/items/${item.id}`);
+    res.redirect(`${res.app.locals.base}/`);
   } catch (err) {
     next(err);
   }
