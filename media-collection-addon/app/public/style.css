@@ -99,6 +99,7 @@ img { max-width: 100%; display: block; }
   display: flex;
   align-items: center;
   gap: .6rem;
+  position: relative;
 }
 
 .nav-primary {
@@ -106,6 +107,7 @@ img { max-width: 100%; display: block; }
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
+  position: relative;
 }
 
 .nav-link-collection { display: none; }
@@ -131,6 +133,7 @@ img { max-width: 100%; display: block; }
 .nav-more {
   position: relative;
   display: block;
+  z-index: 10;
 }
 
 .nav-csv {
@@ -175,7 +178,7 @@ img { max-width: 100%; display: block; }
   display: none;
   flex-direction: column;
   gap: .35rem;
-  z-index: 200;
+  z-index: 500;
 }
 
 .nav-more-panel a {
