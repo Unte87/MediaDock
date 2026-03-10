@@ -72,18 +72,5 @@
   </footer>
 
   <script src="<%= base %>/public/theme-selector.js?v=<%= assetVersion %>"></script>
-  <script>
-    // Handle theme options
-    document.querySelectorAll('.theme-option').forEach(option => {
-      option.addEventListener('click', (e) => {
-        e.preventDefault();
-        const theme = e.target.getAttribute('data-theme');
-        ThemeSelector.applyTheme(theme);
-        // Close the details element
-        const details = e.target.closest('details[open]');
-        if (details) details.removeAttribute('open');
-      });
-    });
-  </script>
 </body>
 </html>

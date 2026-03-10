@@ -23,7 +23,32 @@ const ThemeSelector = {
     'synthwave',
     'vinyl'
   ],
+  memoryTheme: null,
   currentTheme: null,
+
+  /**
+   * Read persisted theme; gracefully handles environments where
+   * localStorage is unavailable (e.g. some embedded WebViews).
+   */
+  getStoredTheme() {
+    try {
+      return localStorage.getItem(this.STORAGE_KEY);
+    } catch (err) {
+      return this.memoryTheme;
+    }
+  },
+
+  /**
+   * Persist theme with in-memory fallback when localStorage is blocked.
+   */
+  setStoredTheme(theme) {
+    this.memoryTheme = theme;
+    try {
+      localStorage.setItem(this.STORAGE_KEY, theme);
+    } catch (err) {
+      // No-op: in-memory fallback keeps theme switch functional for this session.
+    }
+  },
 
   /**
    * Initialize theme selector
@@ -37,10 +62,11 @@ const ThemeSelector = {
    * Load saved theme or use default
    */
   loadTheme() {
-    const saved = localStorage.getItem(this.STORAGE_KEY);
+    const saved = this.getStoredTheme();
     const theme = (saved && this.AVAILABLE_THEMES.includes(saved)) ? saved : this.DEFAULT_THEME;
     this.currentTheme = theme;
-    this.applyTheme(theme);
+    this.applyTheme(theme, false);
+    this.updateSelectValue(theme);
   },
 
   /**
@@ -54,7 +80,7 @@ const ThemeSelector = {
     document.documentElement.setAttribute('data-theme', theme);
     if (persist) {
       this.currentTheme = theme;
-      localStorage.setItem(this.STORAGE_KEY, theme);
+      this.setStoredTheme(theme);
       this.updateSelectValue(theme);
     }
   },

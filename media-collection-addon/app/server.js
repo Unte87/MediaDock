@@ -12,13 +12,14 @@ const csvRouter   = require('./routes/csv');
 
 const app = express();
 const PORT = process.env.PORT || 8099;
+const buildStamp = process.env.ASSET_VERSION || Date.now().toString();
 
 // ── Template engine ──────────────────────────────────────────────────────────
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Cache-busting for static assets
-app.locals.assetVersion = addonConfig.version || 'dev';
+// Cache-busting for static assets: new stamp on every restart unless overridden.
+app.locals.assetVersion = `${addonConfig.version || 'dev'}-${buildStamp}`;
 
 // ── Middleware ────────────────────────────────────────────────────────────────
 app.use(morgan('combined'));
@@ -34,7 +35,15 @@ app.use((req, res, next) => {
 });
 
 // Static files
-app.use('/public', express.static(path.join(__dirname, 'public')));
+app.use('/public', express.static(path.join(__dirname, 'public'), {
+  etag: false,
+  lastModified: false,
+  setHeaders: (res) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+}));
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use('/', indexRouter);
