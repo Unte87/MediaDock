@@ -11,7 +11,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Wunschliste erweitern – VinylVault</title>
-  <link rel="stylesheet" href="<%= base %>/public/style.css" />
+  <link rel="stylesheet" href="<%= base %>/public/style.css?v=<%= assetVersion %>" />
+  <link rel="stylesheet" href="<%= base %>/public/themes.css?v=<%= assetVersion %>" />
   <style>
     .wl-grid {
       display: grid;
@@ -83,30 +84,42 @@
     <div class="nav-wrap">
       <nav class="nav-primary">
         <a class="btn btn-ghost nav-link-collection" href="<%= base %>/"><span class="btn-icon"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" /><circle cx="12" cy="12" r="2" fill="currentColor" /></svg></span><span class="btn-label">Sammlung</span></a>
-        <details class="nav-more nav-csv">
-          <summary class="nav-more-btn" aria-label="CSV">CSV</summary>
-          <div class="nav-more-panel">
-            <a href="<%= base %>/csv">CSV-Import</a>
-            <a href="<%= base %>/csv/export">CSV-Export</a>
-          </div>
-        </details>
-        <a class="nav-link-desktop" href="<%= base %>/items/bulk-refresh">Massenanalyse</a>
         <a href="<%= base %>/items/wishlist-add" class="btn btn-secondary"><span class="btn-icon">♥</span><span class="btn-label">Wunschliste erweitern</span></a>
         <a href="<%= base %>/items/add" class="btn btn-primary"><span class="btn-icon">+</span><span class="btn-label">Hinzufügen</span></a>
+        <details class="nav-more nav-main">
+          <summary class="nav-more-btn" aria-label="Menue">Menu</summary>
+          <div class="nav-more-panel">
+            <details class="nav-more-sub">
+              <summary class="nav-more-sub-btn">CSV</summary>
+              <div class="nav-more-sub-panel">
+                <a href="<%= base %>/csv">CSV-Import</a>
+                <a href="<%= base %>/csv/export">CSV-Export</a>
+              </div>
+            </details>
+            <a href="<%= base %>/items/bulk-refresh">Massenanalyse</a>
+            <details class="nav-more-sub">
+              <summary class="nav-more-sub-btn">Theme</summary>
+              <div class="nav-more-sub-panel nav-theme-panel">
+                <a href="javascript:void(0)" class="theme-option" data-theme="amber">Amber</a>
+                <a href="javascript:void(0)" class="theme-option" data-theme="dark">Dark</a>
+                <a href="javascript:void(0)" class="theme-option" data-theme="forest">Forest</a>
+                <a href="javascript:void(0)" class="theme-option" data-theme="gold">Gold</a>
+                <a href="javascript:void(0)" class="theme-option" data-theme="jazz">Jazz</a>
+                <a href="javascript:void(0)" class="theme-option" data-theme="matrix">Matrix</a>
+                <a href="javascript:void(0)" class="theme-option" data-theme="midnight">Midnight</a>
+                <a href="javascript:void(0)" class="theme-option" data-theme="ocean">Ocean</a>
+                <a href="javascript:void(0)" class="theme-option" data-theme="punk">Punk</a>
+                <a href="javascript:void(0)" class="theme-option" data-theme="retro">Retro</a>
+                <a href="javascript:void(0)" class="theme-option" data-theme="ruby">Ruby</a>
+                <a href="javascript:void(0)" class="theme-option" data-theme="slate">Slate</a>
+                <a href="javascript:void(0)" class="theme-option" data-theme="sunset">Sunset</a>
+                <a href="javascript:void(0)" class="theme-option" data-theme="synthwave">Synthwave</a>
+                <a href="javascript:void(0)" class="theme-option" data-theme="vinyl">Vinyl</a>
+              </div>
+            </details>
+          </div>
+        </details>
       </nav>
-      <details class="nav-more">
-        <summary class="nav-more-btn" aria-label="Menue">Menu</summary>
-        <div class="nav-more-panel">
-          <details class="nav-more-sub">
-            <summary class="nav-more-sub-btn">CSV</summary>
-            <div class="nav-more-sub-panel">
-              <a href="<%= base %>/csv">CSV-Import</a>
-              <a href="<%= base %>/csv/export">CSV-Export</a>
-            </div>
-          </details>
-          <a href="<%= base %>/items/bulk-refresh">Massenanalyse</a>
-        </div>
-      </details>
     </div>
   </header>
 
@@ -338,5 +351,6 @@
     document.getElementById('art-search-btn').addEventListener('click', searchArtists);
     document.getElementById('art-query').addEventListener('keydown', e => e.key === 'Enter' && searchArtists());
   </script>
+  <script src="<%= base %>/public/theme-selector.js?v=<%= assetVersion %>"></script>
 </body>
 </html>

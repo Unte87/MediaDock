@@ -2,6 +2,8 @@ const express = require('express');
 const path = require('path');
 const morgan = require('morgan');
 
+const addonConfig = require(path.join(__dirname, 'package.json'));
+
 const db = require('./database');
 const indexRouter = require('./routes/index');
 const itemsRouter = require('./routes/items');
@@ -14,6 +16,9 @@ const PORT = process.env.PORT || 8099;
 // ── Template engine ──────────────────────────────────────────────────────────
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+
+// Cache-busting for static assets
+app.locals.assetVersion = addonConfig.version || 'dev';
 
 // ── Middleware ────────────────────────────────────────────────────────────────
 app.use(morgan('combined'));
