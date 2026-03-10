@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><%- title %> – VinylVault</title>
   <link rel="stylesheet" href="<%= base %>/public/style.css" />
+  <link rel="stylesheet" href="<%= base %>/public/themes.css" />
 </head>
 <body>
   <header class="site-header">
@@ -23,13 +24,47 @@
           </div>
         </details>
         <a class="nav-link-desktop" href="<%= base %>/items/bulk-refresh">Massenanalyse</a>
+        <div class="theme-selector-wrapper">
+          <select id="theme-select" class="theme-select" aria-label="Theme wechseln">
+            <option value="dark">🌙 Dark</option>
+            <option value="vinyl">🎶 Vinyl</option>
+            <option value="ocean">🌊 Ocean</option>
+            <option value="forest">🌲 Forest</option>
+            <option value="synthwave">🎨 Synthwave</option>
+          </select>
+        </div>
         <a href="<%= base %>/items/wishlist-add" class="btn btn-secondary"><span class="btn-icon">♥</span><span class="btn-label">Wunschliste</span></a>
         <a href="<%= base %>/items/add" class="btn btn-primary"><span class="btn-icon">+</span><span class="btn-label">Hinzufügen</span></a>
       </nav>
       <details class="nav-more">
-        <summary class="nav-more-btn" aria-label="Menue">Menu</summary>
+        <summary class="nav-more-btn" aria-label="Menue">Menu</summa
+          <details class="nav-more-sub">
+            <summary class="nav-more-sub-btn">Theme</summary>
+            <div class="nav-more-sub-panel nav-theme-panel">
+              <a href="javascript:void(0)" class="theme-option" data-theme="dark">🌙 Dark</a>
+              <a href="javascript:void(0)" class="theme-option" data-theme="vinyl">🎶 Vinyl</a>
+              <a href="javascript:void(0)" class="theme-option" data-theme="ocean">🌊 Ocean</a>
+              <a href="javascript:void(0)" class="theme-option" data-theme="forest">🌲 Forest</a>
+              <a href="javascript:void(0)" class="theme-option" data-theme="synthwave">🎨 Synthwave</a>
+            </div>
+          </details>ry>
         <div class="nav-more-panel">
           <details class="nav-more-sub">
+
+  <script src="<%= base %>/public/theme-selector.js"></script>
+  <script>
+    // Handle mobile theme options
+    document.querySelectorAll('.theme-option').forEach(option => {
+      option.addEventListener('click', (e) => {
+        e.preventDefault();
+        const theme = e.target.getAttribute('data-theme');
+        ThemeSelector.applyTheme(theme);
+        // Close the details element
+        const details = e.target.closest('[open]');
+        if (details) details.removeAttribute('open');
+      });
+    });
+  </script>
             <summary class="nav-more-sub-btn">CSV</summary>
             <div class="nav-more-sub-panel">
               <a href="<%= base %>/csv">CSV-Import</a>
