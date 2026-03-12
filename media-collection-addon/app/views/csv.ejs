@@ -5,13 +5,14 @@
    */
 %>
 <!DOCTYPE html>
-<html lang="de">
+<html lang="<%= lang %>">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CSV-Import – VinylVault</title>
+  <title><%= __('csv_page_title') %> – VinylVault</title>
   <link rel="stylesheet" href="<%= base %>/public/style.css?v=<%= assetVersion %>" />
   <link rel="stylesheet" href="<%= base %>/public/themes.css?v=<%= assetVersion %>" />
+  <%- include('partials/head-i18n') %>
 </head>
 <body>
   <header class="site-header">
@@ -21,20 +22,20 @@
     </a>
     <div class="nav-wrap">
       <nav class="nav-primary">
-        <a class="btn btn-ghost nav-link-collection" href="<%= base %>/"><span class="btn-icon"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" /><circle cx="12" cy="12" r="2" fill="currentColor" /></svg></span><span class="btn-label">Sammlung</span></a>
-        <a href="<%= base %>/items/wishlist-add" class="btn btn-secondary"><span class="btn-icon">♥</span><span class="btn-label">Wunschliste</span></a>
-        <a href="<%= base %>/items/add" class="btn btn-primary"><span class="btn-icon">+</span><span class="btn-label">Hinzufügen</span></a>
+        <a class="btn btn-ghost nav-link-collection" href="<%= base %>/"><span class="btn-icon"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" /><circle cx="12" cy="12" r="2" fill="currentColor" /></svg></span><span class="btn-label"><%= __('nav_collection') %></span></a>
+        <a href="<%= base %>/items/wishlist-add" class="btn btn-secondary"><span class="btn-icon">♥</span><span class="btn-label"><%= __('nav_wishlist') %></span></a>
+        <a href="<%= base %>/items/add" class="btn btn-primary"><span class="btn-icon">+</span><span class="btn-label"><%= __('nav_add') %></span></a>
         <details class="nav-more nav-main">
           <summary class="nav-more-btn" aria-label="Menue">Menu</summary>
           <div class="nav-more-panel">
             <details class="nav-more-sub">
               <summary class="nav-more-sub-btn">CSV</summary>
               <div class="nav-more-sub-panel">
-                <a href="<%= base %>/csv">CSV-Import</a>
-                <a href="<%= base %>/csv/export">CSV-Export</a>
+                <a href="<%= base %>/csv"><%= __('nav_csv_import') %></a>
+                <a href="<%= base %>/csv/export"><%= __('nav_csv_export') %></a>
               </div>
             </details>
-            <a href="<%= base %>/items/bulk-refresh">Massenanalyse</a>
+            <a href="<%= base %>/items/bulk-refresh"><%= __('nav_bulk_analysis') %></a>
             <details class="nav-more-sub">
               <summary class="nav-more-sub-btn">Theme</summary>
               <div class="nav-more-sub-panel nav-theme-panel">
@@ -55,6 +56,10 @@
                 <a href="javascript:void(0)" class="theme-option" data-theme="vinyl">Vinyl</a>
               </div>
             </details>
+            <div class="nav-lang-group">
+              <a href="javascript:void(0)" onclick="setLang('de')" class="lang-option<%= lang === 'de' ? ' active' : '' %>">DE</a>
+              <a href="javascript:void(0)" onclick="setLang('en')" class="lang-option<%= lang === 'en' ? ' active' : '' %>">EN</a>
+            </div>
           </div>
         </details>
       </nav>
@@ -62,29 +67,29 @@
   </header>
 
   <main class="container">
-    <a href="<%= base %>/" class="back-link">&larr; Zur Sammlung</a>
-    <h1 class="page-title">CSV-Import</h1>
+    <a href="<%= base %>/" class="back-link">&larr; <%= __('back_to_collection') %></a>
+    <h1 class="page-title"><%= __('csv_page_title') %></h1>
 
     <% if (typeof result !== 'undefined' && result) { %>
       <!-- ── Ergebnis ──────────────────────────────────────────────────── -->
       <div class="alert alert-success">
-        <strong><%= result.count %> Platten</strong> erfolgreich importiert.
+        <strong><%= __('n_records_imported').replace('{n}', result.count) %></strong>
       </div>
 
       <% if (result.errors && result.errors.length > 0) { %>
         <div class="alert alert-warning">
-          <strong><%= result.errors.length %> Zeilen</strong> konnten nicht importiert werden:
+          <strong><%= __('n_rows_failed').replace('{n}', result.errors.length) %></strong>
           <ul class="csv-error-list">
             <% for (const e of result.errors) { %>
-              <li><code>Zeile <%= e.row %></code>: <%= e.message %></li>
+              <li><code><%= __('row_n').replace('{n}', e.row) %></code>: <%= e.message %></li>
             <% } %>
           </ul>
         </div>
       <% } %>
 
       <div class="form-actions" style="margin-top:1.5rem">
-        <a href="<%= base %>/" class="btn btn-primary">Zur Sammlung</a>
-        <a href="<%= base %>/csv" class="btn btn-ghost">Weiteren Import</a>
+        <a href="<%= base %>/" class="btn btn-primary"><%= __('to_collection') %></a>
+        <a href="<%= base %>/csv" class="btn btn-ghost"><%= __('more_import') %></a>
       </div>
 
     <% } else { %>
@@ -95,35 +100,33 @@
       <% } %>
 
       <p class="form-hint">
-        Füge eine CSV-Tabelle ein. Unterstützte Spalten (Semikolon <em>oder</em> Komma als Trennzeichen):<br />
+        <%= __('csv_hint_intro') %><br />
         <code>title;artist;year;genre;owned;wishlist;notes;cover_url</code><br />
-        Die erste Zeile kann eine Kopfzeile sein (wird automatisch erkannt).
-        <code>owned</code> und <code>wishlist</code> akzeptieren <code>1</code>, <code>ja</code> oder <code>true</code>.
+        <%= __('csv_hint_header') %>
+        <code>owned</code> / <code>wishlist</code>: <%= __('csv_hint_bool') %>
       </p>
 
       <form class="form-card" method="post" action="<%= base %>/csv">
         <div class="form-group">
-          <label for="csv">CSV-Daten</label>
+          <label for="csv"><%= __('csv_data_label') %></label>
           <textarea
             id="csv"
             name="csv"
             rows="14"
-            placeholder="title;artist;year;genre;owned;wishlist;notes;cover_url
-Reign in Blood;Slayer;1986;Thrash;1;0;Klassiker;https://example.com/cover.jpg
-World Painted Blood;Slayer;2009;Thrash;0;1;;"
+            placeholder="<%= __('csv_placeholder') %>"
             required
           ></textarea>
         </div>
         <div class="form-actions">
-          <a href="<%= base %>/" class="btn btn-ghost">Abbrechen</a>
-          <button type="submit" class="btn btn-primary">Importieren</button>
+          <a href="<%= base %>/" class="btn btn-ghost"><%= __('cancel') %></a>
+          <button type="submit" class="btn btn-primary"><%= __('import_btn') %></button>
         </div>
       </form>
     <% } %>
   </main>
 
   <footer class="site-footer">
-    <small>VinylVault &mdash; persönliche Vinylsammlung</small>
+    <small><%= __('footer') %></small>
   </footer>
   <script src="<%= base %>/public/theme-selector.js?v=<%= assetVersion %>"></script>
 </body>

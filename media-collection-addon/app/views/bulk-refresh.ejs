@@ -6,13 +6,14 @@
    */
 %>
 <!DOCTYPE html>
-<html lang="de">
+<html lang="<%= lang %>">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Massenanalyse – VinylVault</title>
+  <title><%= __('bulk_page_title') %> – VinylVault</title>
   <link rel="stylesheet" href="<%= base %>/public/style.css?v=<%= assetVersion %>" />
   <link rel="stylesheet" href="<%= base %>/public/themes.css?v=<%= assetVersion %>" />
+  <%- include('partials/head-i18n') %>
 </head>
 <body>
   <header class="site-header">
@@ -22,20 +23,20 @@
     </a>
     <div class="nav-wrap">
       <nav class="nav-primary">
-        <a class="btn btn-ghost nav-link-collection" href="<%= base %>/"><span class="btn-icon"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" /><circle cx="12" cy="12" r="2" fill="currentColor" /></svg></span><span class="btn-label">Sammlung</span></a>
-        <a href="<%= base %>/items/wishlist-add" class="btn btn-secondary"><span class="btn-icon">♥</span><span class="btn-label">Wunschliste</span></a>
-        <a href="<%= base %>/items/add" class="btn btn-primary"><span class="btn-icon">+</span><span class="btn-label">Hinzufügen</span></a>
+        <a class="btn btn-ghost nav-link-collection" href="<%= base %>/"><span class="btn-icon"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" /><circle cx="12" cy="12" r="2" fill="currentColor" /></svg></span><span class="btn-label"><%= __('nav_collection') %></span></a>
+        <a href="<%= base %>/items/wishlist-add" class="btn btn-secondary"><span class="btn-icon">♥</span><span class="btn-label"><%= __('nav_wishlist') %></span></a>
+        <a href="<%= base %>/items/add" class="btn btn-primary"><span class="btn-icon">+</span><span class="btn-label"><%= __('nav_add') %></span></a>
         <details class="nav-more nav-main">
           <summary class="nav-more-btn" aria-label="Menue">Menu</summary>
           <div class="nav-more-panel">
             <details class="nav-more-sub">
               <summary class="nav-more-sub-btn">CSV</summary>
               <div class="nav-more-sub-panel">
-                <a href="<%= base %>/csv">CSV-Import</a>
-                <a href="<%= base %>/csv/export">CSV-Export</a>
+                <a href="<%= base %>/csv"><%= __('nav_csv_import') %></a>
+                <a href="<%= base %>/csv/export"><%= __('nav_csv_export') %></a>
               </div>
             </details>
-            <a href="<%= base %>/items/bulk-refresh">Massenanalyse</a>
+            <a href="<%= base %>/items/bulk-refresh"><%= __('nav_bulk_analysis') %></a>
             <details class="nav-more-sub">
               <summary class="nav-more-sub-btn">Theme</summary>
               <div class="nav-more-sub-panel nav-theme-panel">
@@ -56,6 +57,10 @@
                 <a href="javascript:void(0)" class="theme-option" data-theme="vinyl">Vinyl</a>
               </div>
             </details>
+            <div class="nav-lang-group">
+              <a href="javascript:void(0)" onclick="setLang('de')" class="lang-option<%= lang === 'de' ? ' active' : '' %>">DE</a>
+              <a href="javascript:void(0)" onclick="setLang('en')" class="lang-option<%= lang === 'en' ? ' active' : '' %>">EN</a>
+            </div>
           </div>
         </details>
       </nav>
@@ -65,17 +70,17 @@
   <main class="container container--wide">
     <div class="bulk-header">
       <div>
-        <h1 class="page-title" style="margin-bottom:.25rem">Massenanalyse</h1>
+        <h1 class="page-title" style="margin-bottom:.25rem"><%= __('bulk_page_title') %></h1>
         <p class="page-subtitle">
-          <strong><%= items.length %></strong> Einträge ohne Cover
-          <span style="color:var(--color-muted)">(<%= totalAll %> gesamt)</span>
-          &mdash; MusicBrainz-Vorschläge laden und Cover direkt übernehmen.
+          <strong><%= __('n_entries_no_cover').replace('{n}', items.length) %></strong>
+          <span style="color:var(--color-muted)">(<%= __('n_total').replace('{n}', totalAll) %>)</span>
+          &mdash; <%= __('bulk_desc') %>
         </p>
       </div>
       <div class="bulk-header-actions">
         <span class="bulk-progress" id="progress-label"></span>
-        <button id="btn-start" class="btn btn-primary">🔍 Suche starten</button>
-        <button id="btn-stop"  class="btn btn-ghost"  style="display:none">⏹ Stopp</button>
+        <button id="btn-start" class="btn btn-primary"><%= __('start_search_btn') %></button>
+        <button id="btn-stop"  class="btn btn-ghost"  style="display:none"><%= __('stop_btn') %></button>
       </div>
     </div>
 
@@ -84,17 +89,15 @@
         <thead>
           <tr>
             <th class="bt-col-cover"></th>
-            <th class="bt-col-info">Aktueller Eintrag</th>
-            <th class="bt-col-sug">Vorschlag 1</th>
-            <th class="bt-col-sug">Vorschlag 2</th>
-            <th class="bt-col-sug">Vorschlag 3</th>
-            <th class="bt-col-sug">Vorschlag 4</th>
-            <th class="bt-col-sug">Vorschlag 5</th>
+            <th class="bt-col-info"><%= __('col_current_entry') %></th>
+            <% for (let s = 1; s <= 5; s++) { %>
+            <th class="bt-col-sug"><%= __('suggestion_n').replace('{n}', s) %></th>
+            <% } %>
           </tr>
         </thead>
         <tbody>
           <% if (items.length === 0) { %>
-            <tr><td colspan="7" style="text-align:center;padding:2.5rem;color:var(--color-muted);">🎉 Alle Einträge haben bereits ein Cover.</td></tr>
+            <tr><td colspan="7" style="text-align:center;padding:2.5rem;color:var(--color-muted);"><%= __('all_have_covers') %></td></tr>
           <% } %>
           <% for (const item of items) { %>
             <tr
@@ -128,7 +131,7 @@
                 </a>
                 <span class="bt-item-meta">
                   <% if (item.year) { %><span class="bt-year"><%= item.year %></span><% } %>
-                  <% if (item.mbid) { %><span class="bt-mbid-dot" title="MBID vorhanden">●</span><% } %>
+                  <% if (item.mbid) { %><span class="bt-mbid-dot" title="<%= __('mbid_present') %>">●</span><% } %>
                 </span>
                 <span class="bt-row-status" id="status-<%= item.id %>"></span>
               </td>
@@ -146,7 +149,7 @@
   </main>
 
   <footer class="site-footer">
-    <small>VinylVault &mdash; persönliche Vinylsammlung</small>
+    <small><%= __('footer') %></small>
   </footer>
 
   <script>
@@ -164,7 +167,7 @@
     }
 
     function setProgress(d, t) {
-      progLabel.textContent = d + ' / ' + t + ' geladen';
+      progLabel.textContent = __('progress_loaded').replace('{done}', d).replace('{total}', t);
     }
 
     // Suggestion-Karte als HTML
@@ -190,7 +193,7 @@
           </div>
           <button
             class="bt-sug-apply"
-            title="Übernehmen"
+            title="${__('apply_btn_title')}"
             data-item-id="${itemId}"
             data-title="${escHtml(sug.title)}"
             data-artist="${escHtml(sug.artist)}"
@@ -225,7 +228,7 @@
           const row = document.getElementById('row-' + itemId);
           row?.classList.add('bt-row--applied');
           document.getElementById('status-' + itemId).innerHTML =
-            '<span class="bt-applied-badge">✔ übernommen</span>';
+            '<span class="bt-applied-badge">✔ ' + __('applied_badge') + '</span>';
           // Cover in der ersten Spalte aktualisieren
           const coverCell = row?.querySelector('.bt-cover, .bt-cover--placeholder');
           if (coverCell && cover_url) {
@@ -237,7 +240,7 @@
           btn.disabled    = false;
         }
       } catch (err) {
-        btn.textContent = '✘ ' + (err.message || 'Fehler');
+        btn.textContent = '✘ ' + (err.message || __('error'));
         btn.disabled    = false;
       }
     }
@@ -269,10 +272,10 @@
           }
         }
         status.innerHTML = sugs.length
-          ? `<span class="bt-found">${sugs.length} Treffer</span>`
-          : '<span class="bt-not-found">keine Treffer</span>';
+          ? `<span class="bt-found">${__('n_results_found').replace('{n}', sugs.length)}</span>`
+          : '<span class="bt-not-found">' + __('no_match') + '</span>';
       } catch {
-        status.innerHTML = '<span class="bt-error">Fehler</span>';
+        status.innerHTML = '<span class="bt-error">' + __('error') + '</span>';
       }
 
       done++;
@@ -280,7 +283,7 @@
       if (done >= total) {
         btnStop.style.display  = 'none';
         btnStart.style.display = '';
-        btnStart.textContent   = '🔄 Erneut suchen';
+        btnStart.textContent   = __('search_again_btn');
         btnStart.disabled      = false;
       }
     }
@@ -304,7 +307,7 @@
       btnStop.style.display  = 'none';
       btnStart.style.display = '';
       btnStart.disabled      = false;
-      btnStart.textContent   = '🔄 Weitersuchen';
+      btnStart.textContent   = __('continue_search_btn');
     });
   </script>
   <script src="<%= base %>/public/theme-selector.js?v=<%= assetVersion %>"></script>

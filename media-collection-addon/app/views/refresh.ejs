@@ -6,13 +6,14 @@
    */
 %>
 <!DOCTYPE html>
-<html lang="de">
+<html lang="<%= lang %>">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Metadaten nachladen – VinylVault</title>
+  <title><%= __('refresh_page_title') %> – VinylVault</title>
   <link rel="stylesheet" href="<%= base %>/public/style.css?v=<%= assetVersion %>" />
   <link rel="stylesheet" href="<%= base %>/public/themes.css?v=<%= assetVersion %>" />
+  <%- include('partials/head-i18n') %>
 </head>
 <body>
   <header class="site-header">
@@ -22,20 +23,20 @@
     </a>
     <div class="nav-wrap">
       <nav class="nav-primary">
-        <a class="btn btn-ghost nav-link-collection" href="<%= base %>/"><span class="btn-icon"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" /><circle cx="12" cy="12" r="2" fill="currentColor" /></svg></span><span class="btn-label">Sammlung</span></a>
-        <a href="<%= base %>/items/wishlist-add" class="btn btn-secondary"><span class="btn-icon">♥</span><span class="btn-label">Wunschliste</span></a>
-        <a href="<%= base %>/items/add" class="btn btn-primary"><span class="btn-icon">+</span><span class="btn-label">Hinzufügen</span></a>
+        <a class="btn btn-ghost nav-link-collection" href="<%= base %>/"><span class="btn-icon"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" /><circle cx="12" cy="12" r="2" fill="currentColor" /></svg></span><span class="btn-label"><%= __('nav_collection') %></span></a>
+        <a href="<%= base %>/items/wishlist-add" class="btn btn-secondary"><span class="btn-icon">♥</span><span class="btn-label"><%= __('nav_wishlist') %></span></a>
+        <a href="<%= base %>/items/add" class="btn btn-primary"><span class="btn-icon">+</span><span class="btn-label"><%= __('nav_add') %></span></a>
         <details class="nav-more nav-main">
           <summary class="nav-more-btn" aria-label="Menue">Menu</summary>
           <div class="nav-more-panel">
             <details class="nav-more-sub">
               <summary class="nav-more-sub-btn">CSV</summary>
               <div class="nav-more-sub-panel">
-                <a href="<%= base %>/csv">CSV-Import</a>
-                <a href="<%= base %>/csv/export">CSV-Export</a>
+                <a href="<%= base %>/csv"><%= __('nav_csv_import') %></a>
+                <a href="<%= base %>/csv/export"><%= __('nav_csv_export') %></a>
               </div>
             </details>
-            <a href="<%= base %>/items/bulk-refresh">Massenanalyse</a>
+            <a href="<%= base %>/items/bulk-refresh"><%= __('nav_bulk_analysis') %></a>
             <details class="nav-more-sub">
               <summary class="nav-more-sub-btn">Theme</summary>
               <div class="nav-more-sub-panel nav-theme-panel">
@@ -56,6 +57,10 @@
                 <a href="javascript:void(0)" class="theme-option" data-theme="vinyl">Vinyl</a>
               </div>
             </details>
+            <div class="nav-lang-group">
+              <a href="javascript:void(0)" onclick="setLang('de')" class="lang-option<%= lang === 'de' ? ' active' : '' %>">DE</a>
+              <a href="javascript:void(0)" onclick="setLang('en')" class="lang-option<%= lang === 'en' ? ' active' : '' %>">EN</a>
+            </div>
           </div>
         </details>
       </nav>
@@ -63,12 +68,12 @@
   </header>
 
   <main class="container">
-    <a href="<%= base %>/items/<%= item.id %>" class="back-link">&larr; Zurück zu „<%= item.title %>"</a>
-    <h1 class="page-title">Metadaten nachladen</h1>
+    <a href="<%= base %>/items/<%= item.id %>" class="back-link">&larr; <%= __('back_to_entry').replace('{title}', item.title) %></a>
+    <h1 class="page-title"><%= __('refresh_page_title') %></h1>
 
     <!-- ── Aktueller Stand ──────────────────────────────────────────────── -->
     <div class="refresh-current">
-      <h2 class="refresh-section-title">Aktueller Eintrag</h2>
+      <h2 class="refresh-section-title"><%= __('current_entry') %></h2>
       <div class="refresh-current-card">
         <div class="result-cover">
           <% if (item.cover_url) { %>
@@ -82,9 +87,9 @@
           <p class="result-artist"><%= item.artist || '–' %></p>
           <p class="result-year"><%= item.year || '–' %></p>
           <% if (item.mbid) { %>
-            <p class="refresh-mbid-note">MBID vorhanden</p>
+            <p class="refresh-mbid-note"><%= __('mbid_present') %></p>
           <% } else { %>
-            <p class="refresh-mbid-note refresh-mbid-missing">Kein MBID</p>
+            <p class="refresh-mbid-note refresh-mbid-missing"><%= __('mbid_missing') %></p>
           <% } %>
         </div>
       </div>
@@ -98,15 +103,15 @@
     <!-- ── Vorschläge ────────────────────────────────────── -->
     <% if (!searchError) { %>
       <h2 class="refresh-section-title">
-        MusicBrainz-Vorschläge
-        <span class="refresh-hint">(Klicken um zu übernehmen)</span>
+        <%= __('mb_suggestions') %>
+        <span class="refresh-hint"><%= __('click_to_apply') %></span>
       </h2>
 
       <% if (!suggestions || suggestions.length === 0) { %>
         <div class="empty-state">
-          <p>Keine Treffer gefunden für „<strong><%= item.title %></strong>"
-            <% if (item.artist) { %> von <strong><%= item.artist %></strong><% } %>.</p>
-          <p>Tipp: Titel oder Künstler im Eintrag anpassen und erneut versuchen.</p>
+          <p><%= __('no_results_for') %> „<strong><%= item.title %></strong>“
+            <% if (item.artist) { %> <%= __('by_artist') %> <strong><%= item.artist %></strong><% } %>.</p>
+          <p><%= __('tip_adjust') %></p>
         </div>
       <% } else { %>
         <div class="refresh-results">
@@ -162,12 +167,12 @@
 
     <!-- ── Abbrechen ────────────────────────────────────────────────────── -->
     <div class="form-actions" style="margin-top: 2rem">
-      <a href="<%= base %>/items/<%= item.id %>" class="btn btn-ghost">Abbrechen, nichts übernehmen</a>
+      <a href="<%= base %>/items/<%= item.id %>" class="btn btn-ghost"><%= __('cancel_no_apply') %></a>
     </div>
   </main>
 
   <footer class="site-footer">
-    <small>VinylVault &mdash; persönliche Vinylsammlung</small>
+    <small><%= __('footer') %></small>
   </footer>
   <script src="<%= base %>/public/theme-selector.js?v=<%= assetVersion %>"></script>
 </body>

@@ -1,0 +1,5 @@
+<script>
+var __tr = <%- JSON.stringify(translations) %>;
+var __ = function(k) { return __tr[k] || k; };
+function setLang(l) { document.cookie='lang='+l+';path=/;max-age=31536000;SameSite=Lax'; location.reload(); }
+</script>

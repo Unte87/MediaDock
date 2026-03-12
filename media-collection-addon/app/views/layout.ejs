@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="<%= lang %>">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title><%- title %> – VinylVault</title>
+  <title><%= title %> – VinylVault</title>
   <link rel="stylesheet" href="<%= base %>/public/style.css?v=<%= assetVersion %>" />
   <link rel="stylesheet" href="<%= base %>/public/themes.css?v=<%= assetVersion %>" />
+  <%- include('partials/head-i18n') %>
 </head>
 <body>
   <header class="site-header">
@@ -15,15 +16,15 @@
     </a>
     <div class="nav-wrap">
       <nav class="nav-primary">
-        <a class="btn btn-ghost nav-link-collection" href="<%= base %>/"><span class="btn-icon"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" /><circle cx="12" cy="12" r="2" fill="currentColor" /></svg></span><span class="btn-label">Sammlung</span></a>
+        <a class="btn btn-ghost nav-link-collection" href="<%= base %>/"><span class="btn-icon"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" /><circle cx="12" cy="12" r="2" fill="currentColor" /></svg></span><span class="btn-label"><%= __('nav_collection') %></span></a>
         <details class="nav-more nav-csv">
           <summary class="nav-more-btn" aria-label="CSV">CSV</summary>
           <div class="nav-more-panel">
-            <a href="<%= base %>/csv">CSV-Import</a>
-            <a href="<%= base %>/csv/export">CSV-Export</a>
+            <a href="<%= base %>/csv"><%= __('nav_csv_import') %></a>
+            <a href="<%= base %>/csv/export"><%= __('nav_csv_export') %></a>
           </div>
         </details>
-        <a class="nav-link-desktop" href="<%= base %>/items/bulk-refresh">Massenanalyse</a>
+        <a class="nav-link-desktop" href="<%= base %>/items/bulk-refresh"><%= __('nav_bulk_analysis') %></a>
         <details class="nav-more nav-theme">
           <summary class="nav-more-btn" aria-label="Theme">🎨 Theme</summary>
           <div class="nav-more-panel">
@@ -34,8 +35,8 @@
             <a href="javascript:void(0)" class="theme-option" data-theme="synthwave">🎨 Synthwave</a>
           </div>
         </details>
-        <a href="<%= base %>/items/wishlist-add" class="btn btn-ghost nav-btn-wish"><span class="btn-icon">♥</span><span class="btn-label">Wunschliste</span></a>
-        <a href="<%= base %>/items/add" class="btn btn-primary nav-btn-add"><span class="btn-icon">+</span><span class="btn-label">Hinzufügen</span></a>
+        <a href="<%= base %>/items/wishlist-add" class="btn btn-ghost nav-btn-wish"><span class="btn-icon">♥</span><span class="btn-label"><%= __('nav_wishlist') %></span></a>
+        <a href="<%= base %>/items/add" class="btn btn-primary nav-btn-add"><span class="btn-icon">+</span><span class="btn-label"><%= __('nav_add') %></span></a>
       </nav>
       <details class="nav-more">
         <summary class="nav-more-btn" aria-label="Menue">Menu</summary>
@@ -43,11 +44,11 @@
           <details class="nav-more-sub">
             <summary class="nav-more-sub-btn">CSV</summary>
             <div class="nav-more-sub-panel">
-              <a href="<%= base %>/csv">CSV-Import</a>
-              <a href="<%= base %>/csv/export">CSV-Export</a>
+              <a href="<%= base %>/csv"><%= __('nav_csv_import') %></a>
+              <a href="<%= base %>/csv/export"><%= __('nav_csv_export') %></a>
             </div>
           </details>
-          <a href="<%= base %>/items/bulk-refresh">Massenanalyse</a>
+          <a href="<%= base %>/items/bulk-refresh"><%= __('nav_bulk_analysis') %></a>
           <details class="nav-more-sub">
             <summary class="nav-more-sub-btn">Theme</summary>
             <div class="nav-more-sub-panel nav-theme-panel">
@@ -68,7 +69,7 @@
   </main>
 
   <footer class="site-footer">
-    <small>VinylVault &mdash; persönliche Vinylsammlung</small>
+    <small><%= __('footer') %></small>
   </footer>
 
   <script src="<%= base %>/public/theme-selector.js?v=<%= assetVersion %>"></script>

@@ -16,7 +16,7 @@
 const axios = require('axios');
 
 const BASE_URL   = 'https://api.discogs.com';
-const USER_AGENT = 'VinylVault/1.0 +https://github.com/YOUR_GITHUB_USERNAME/VinylVault';
+const USER_AGENT = 'VinylVault/1.0 +https://github.com/Unte87/VinylVault';
 
 // ── HTTP-Client ───────────────────────────────────────────────────────────────
 

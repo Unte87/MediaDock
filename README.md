@@ -1,57 +1,97 @@
-# MediaDock
+# VinylVault
 
-> Self-hosted media collection manager – Home Assistant Add-on
+> Self-hosted Vinyl-Sammlungsverwaltung – Home Assistant Add-on
 
-Manage your vinyl records, CDs, games, Blu-rays and other media directly from
-Home Assistant. Cover art and metadata are fetched automatically from
-**MusicBrainz** and the **Cover Art Archive**.
+Verwalte deine Schallplattensammlung direkt aus Home Assistant heraus.
+Metadaten und Cover werden automatisch von **MusicBrainz** und dem
+**Cover Art Archive** geladen.
 
 ---
 
 ## Features
 
-- **Catalogue everything** – vinyl, CD, game, Blu-ray, DVD, book, and more
-- **Automatic metadata enrichment** via MusicBrainz API
-- **Automatic cover art** via Cover Art Archive
-- **Filter** by media type, owned status, or wish-list
-- **Persistent storage** – SQLite database in Home Assistant's `/data` volume
-- **Home Assistant ingress** – accessible directly in the sidebar
-- Runs entirely offline after metadata is fetched
+### Sammlung verwalten
+- **Hinzufügen, Bearbeiten, Löschen** einzelner Einträge
+- **Bulk-Delete** – mehrere Einträge auf einmal markieren und löschen
+- **Wunschliste** – Platten vormerken, die noch fehlen
+- **Bewertung** – 1–5-Sterne-Rating pro Eintrag
+- **Notizen** – Freitextfeld für persönliche Anmerkungen
+- **CSV-Import & -Export** – Sammlung als CSV sichern oder importieren
+
+### Metadaten & Cover
+- **MusicBrainz-Suche** – 6-stufige kaskadierte Suche (Phrase → Term → Fuzzy)
+- **Cover Art Archive** – automatische Cover-Bilder per Release-MBID oder Release-Group
+- **Cover-Vorschläge** – Karussell mit alternativen Covern auf der Detailseite
+- **Massenanalyse** – fehlende Cover für alle Einträge auf einmal suchen und übernehmen
+- **Discogs-Integration** (optional) – zusätzliche Metadatenquelle per Personal Access Token
+
+### Ansichten & Navigation
+- **3 Ansichtsmodi** – Grid, Liste und Karussell
+- **Client-seitige Suche** – Echtzeit-Filter über Titel, Künstler und Genre
+- **Filter** nach Status (Alles / Besitze ich / Wunschliste)
+- **Sortierung** nach Titel, Künstler, Jahr, Bewertung oder Datum
+- **Gruppierung** nach Künstler, Titel, Jahr oder Bewertung
+- **Shop-Links** – Direkt-Links zu Green Hell und Amazon für Wunschlisten-Einträge
+
+### Hinzufügen-Workflow
+- **Release-Suche** – Titel + Künstler eingeben → MusicBrainz-Treffer auswählen
+- **Künstler-Suche** – Künstler suchen → komplette Diskografie durchblättern
+- **Wunschliste per Diskografie** – ganze Alben eines Künstlers auf einmal vormerken
+- **Manuell** – Eintrag komplett von Hand anlegen
+
+### Themes & Oberfläche
+- **15 Farbthemen** – Amber, Dark, Forest, Gold, Jazz, Matrix, Midnight, Ocean, Punk, Retro, Ruby, Slate, Sunset, Synthwave, Vinyl
+- **Responsive Design** – optimiert für Desktop und Mobile
+- **Home Assistant Ingress** – nahtlos in die HA-Sidebar integriert
+
+### Technik
+- **SQLite** (WAL-Mode) – persistente Datenbank im HA-Datenverzeichnis
+- **Rate-Limiting** – schonender Umgang mit MusicBrainz-API (1 Request/1,1 s)
+- **Automatisches Cache-Busting** – versionierte Asset-URLs, kein veralteter CSS/JS-Cache
+- Läuft nach dem Laden der Metadaten komplett offline
 
 ---
 
 ## Installation
 
-### 1. Add this repository to Home Assistant
+### 1. Repository in Home Assistant hinzufügen
 
-1. Open **Home Assistant** → Settings → Add-ons → Add-on Store
-2. Click the **⋮** (three-dot menu) in the top-right corner
-3. Select **Repositories**
-4. Add the URL of this repository, e.g.:
+1. **Home Assistant** öffnen → Einstellungen → Add-ons → Add-on Store
+2. Auf das **⋮**-Menü oben rechts klicken
+3. **Repositories** wählen
+4. URL dieses Repositories einfügen:
    ```
-   https://github.com/YOUR_GITHUB_USERNAME/MediaDock
+   https://github.com/Unte87/VinylVault
    ```
-5. Click **Add → Close**
+5. **Hinzufügen → Schließen**
 
-### 2. Install the add-on
+### 2. Add-on installieren
 
-1. Scroll down to find **MediaDock** in the store
-2. Click it → **Install**
-3. Wait for the image to build/download
+1. In der Add-on-Liste nach **VinylVault** scrollen
+2. Anklicken → **Installieren**
+3. Warten, bis das Image gebaut ist
 
-### 3. Start the add-on
+### 3. Add-on starten
 
-1. Go to the **MediaDock** add-on page
-2. Click **Start**
-3. Enable **Show in sidebar** for quick access
-4. The app is accessible via the sidebar, or at:
+1. Zur **VinylVault**-Add-on-Seite gehen
+2. **Starten** klicken
+3. **In Seitenleiste anzeigen** aktivieren
+4. Alternativ erreichbar unter:
    ```
-   http://<your-ha-ip>:8099/
+   http://<deine-ha-ip>:8099/
    ```
 
 ---
 
-## Local development (without Home Assistant)
+## Discogs-Integration (optional)
+
+VinylVault kann zusätzlich Metadaten von Discogs laden. Dazu in der
+Add-on-Konfiguration einen **Discogs Personal Access Token** hinterlegen.
+Einen Token gibt es unter https://www.discogs.com/settings/developers.
+
+---
+
+## Lokale Entwicklung (ohne Home Assistant)
 
 ```bash
 cd media-collection-addon/app
@@ -59,45 +99,56 @@ npm install
 DB_PATH=./data/collection.db PORT=8099 npm start
 ```
 
-Then open <http://localhost:8099>.
+Dann <http://localhost:8099> öffnen.
 
 ---
 
-## Repository structure
+## Repository-Struktur
 
 ```
-MediaDock/
-├── repository.json              # HA add-on repository manifest
-├── README.md                    # This file
+VinylVault/
+├── repository.json                # HA Add-on Repository Manifest
+├── README.md                      # Diese Datei
 └── media-collection-addon/
-    ├── config.json              # Add-on configuration
-    ├── Dockerfile               # Container definition
-    ├── run.sh                   # Container entry-point
-    ├── README.md                # Add-on-specific docs
+    ├── config.json                # Add-on Konfiguration
+    ├── Dockerfile                 # Container-Definition
+    ├── run.sh                     # Container Entry-Point
+    ├── icon.png                   # Add-on Icon
+    ├── logo.png                   # Add-on Logo
+    ├── README.md                  # Add-on-Doku
     └── app/
         ├── package.json
-        ├── server.js            # Express app entry-point
-        ├── database.js          # SQLite wrapper (better-sqlite3)
-        ├── musicbrainz.js       # MusicBrainz + Cover Art Archive helpers
+        ├── server.js              # Express Entry-Point
+        ├── database.js            # SQLite-Wrapper (better-sqlite3)
+        ├── musicbrainz.js         # MusicBrainz + Cover Art Archive
+        ├── discogs.js             # Discogs-API (optional)
         ├── routes/
-        │   ├── index.js         # Collection overview
-        │   ├── items.js         # Add / detail / update / delete
-        │   └── api.js           # JSON search endpoint
+        │   ├── index.js           # Sammlungsübersicht
+        │   ├── items.js           # CRUD + Refresh + Bulk
+        │   ├── api.js             # JSON-API (Suche, Künstler, Diskografie)
+        │   └── csv.js             # CSV-Import & -Export
         ├── views/
-        │   ├── index.ejs
-        │   ├── add.ejs
-        │   ├── detail.ejs
-        │   └── error.ejs
+        │   ├── index.ejs          # Sammlungs-Grid
+        │   ├── add.ejs            # Hinzufügen (3 Tabs)
+        │   ├── detail.ejs         # Detail / Bearbeiten
+        │   ├── refresh.ejs        # Metadaten nachladen
+        │   ├── bulk-refresh.ejs   # Massenanalyse
+        │   ├── wishlist-add.ejs   # Wunschliste per Diskografie
+        │   ├── csv.ejs            # CSV-Import
+        │   ├── layout.ejs         # Shared Layout
+        │   └── error.ejs          # Fehlerseite
         └── public/
-            └── style.css
+            ├── style.css          # Hauptstyles
+            ├── themes.css         # 15 Farbthemen
+            └── theme-selector.js  # Theme-Auswahl & Persistenz
 ```
 
 ---
 
-## Data storage
+## Datenhaltung
 
-The SQLite database is stored at `/data/collection.db` inside the container,
-which is mapped to Home Assistant's persistent add-on data directory.
+Die SQLite-Datenbank liegt unter `/data/collection.db` im Container und wird
+auf das persistente Datenverzeichnis von Home Assistant gemappt.
 Your collection survives add-on updates and Home Assistant restarts.
 
 ---

@@ -1569,3 +1569,28 @@ img { max-width: 100%; display: block; }
     -webkit-overflow-scrolling: touch;
   }
 }
+
+/* ── Language Switcher ──────────────────────────────────────────────────────── */
+.nav-lang-group {
+  display: flex;
+  gap: 4px;
+  padding: .45rem .75rem;
+  border-top: 1px solid var(--color-border, rgba(255,255,255,.1));
+}
+.lang-option {
+  padding: 3px 10px;
+  font-size: .78rem;
+  font-weight: 600;
+  border-radius: 4px;
+  color: var(--color-text-muted, #888);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.lang-option:hover {
+  background: var(--color-surface-hover, rgba(255,255,255,.08));
+}
+.lang-option.active {
+  background: var(--color-primary, #7c6af7);
+  color: #fff;
+}

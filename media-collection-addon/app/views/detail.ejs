@@ -6,13 +6,14 @@
    */
 %>
 <!DOCTYPE html>
-<html lang="de">
+<html lang="<%= lang %>">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><%= item.title %> – VinylVault</title>
   <link rel="stylesheet" href="<%= base %>/public/style.css?v=<%= assetVersion %>" />
   <link rel="stylesheet" href="<%= base %>/public/themes.css?v=<%= assetVersion %>" />
+  <%- include('partials/head-i18n') %>
 </head>
 <body>
   <header class="site-header">
@@ -22,20 +23,20 @@
     </a>
     <div class="nav-wrap">
       <nav class="nav-primary">
-        <a class="btn btn-ghost nav-link-collection" href="<%= base %>/"><span class="btn-icon"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" /><circle cx="12" cy="12" r="2" fill="currentColor" /></svg></span><span class="btn-label">Sammlung</span></a>
-        <a href="<%= base %>/items/wishlist-add" class="btn btn-secondary"><span class="btn-icon">♥</span><span class="btn-label">Wunschliste</span></a>
-        <a href="<%= base %>/items/add" class="btn btn-primary"><span class="btn-icon">+</span><span class="btn-label">Hinzufügen</span></a>
+        <a class="btn btn-ghost nav-link-collection" href="<%= base %>/"><span class="btn-icon"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" /><circle cx="12" cy="12" r="2" fill="currentColor" /></svg></span><span class="btn-label"><%= __('nav_collection') %></span></a>
+        <a href="<%= base %>/items/wishlist-add" class="btn btn-secondary"><span class="btn-icon">♥</span><span class="btn-label"><%= __('nav_wishlist') %></span></a>
+        <a href="<%= base %>/items/add" class="btn btn-primary"><span class="btn-icon">+</span><span class="btn-label"><%= __('nav_add') %></span></a>
         <details class="nav-more nav-main">
           <summary class="nav-more-btn" aria-label="Menue">Menu</summary>
           <div class="nav-more-panel">
             <details class="nav-more-sub">
               <summary class="nav-more-sub-btn">CSV</summary>
               <div class="nav-more-sub-panel">
-                <a href="<%= base %>/csv">CSV-Import</a>
-                <a href="<%= base %>/csv/export">CSV-Export</a>
+                <a href="<%= base %>/csv"><%= __('nav_csv_import') %></a>
+                <a href="<%= base %>/csv/export"><%= __('nav_csv_export') %></a>
               </div>
             </details>
-            <a href="<%= base %>/items/bulk-refresh">Massenanalyse</a>
+            <a href="<%= base %>/items/bulk-refresh"><%= __('nav_bulk_analysis') %></a>
             <details class="nav-more-sub">
               <summary class="nav-more-sub-btn">Theme</summary>
               <div class="nav-more-sub-panel nav-theme-panel">
@@ -56,6 +57,10 @@
                 <a href="javascript:void(0)" class="theme-option" data-theme="vinyl">Vinyl</a>
               </div>
             </details>
+            <div class="nav-lang-group">
+              <a href="javascript:void(0)" onclick="setLang('de')" class="lang-option<%= lang === 'de' ? ' active' : '' %>">DE</a>
+              <a href="javascript:void(0)" onclick="setLang('en')" class="lang-option<%= lang === 'en' ? ' active' : '' %>">EN</a>
+            </div>
           </div>
         </details>
       </nav>
@@ -63,7 +68,7 @@
   </header>
 
   <main class="container">
-    <a href="<%= base %>/" class="back-link">&larr; Zur Sammlung</a>
+    <a href="<%= base %>/" class="back-link">&larr; <%= __('back_to_collection') %></a>
 
     <div class="detail-layout">
 
@@ -81,11 +86,11 @@
           <input
             id="cover-url-input"
             type="url"
-            placeholder="Cover-URL einfügen …"
+            placeholder="<%= __('placeholder_cover_url') %>"
             value="<%= item.cover_url || '' %>"
             autocomplete="off"
           />
-          <button type="button" class="btn btn-secondary btn-sm" id="cover-url-apply">Laden</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="cover-url-apply"><%= __('load_btn') %></button>
         </div>
         <button
           type="button"
@@ -93,14 +98,14 @@
           id="cover-suggest-btn"
           data-title="<%= (item.title  || '').replace(/"/g, '&quot;') %>"
           data-artist="<%= (item.artist || '').replace(/"/g, '&quot;') %>"
-        >🎨 Cover-Vorschläge</button>
+        >🎨 <%= __('cover_suggestions_btn') %></button>
         <!-- Horizontales Cover-Karussell -->
         <div class="cover-suggestions" id="cover-suggestions" style="display:none">
           <div class="cover-suggestions-track" id="cover-suggestions-track"></div>
         </div>
         <div class="detail-badges">
-          <% if (item.owned)    { %><span class="badge badge-owned">✔ Besitze ich</span><% } %>
-          <% if (item.wishlist) { %><span class="badge badge-wish">♥ Wunschliste</span><% } %>
+          <% if (item.owned)    { %><span class="badge badge-owned">✔ <%= __('label_owned') %></span><% } %>
+          <% if (item.wishlist) { %><span class="badge badge-wish">♥ <%= __('label_wishlist_badge') %></span><% } %>
         </div>
         <% if (item.wishlist) { %>
           <a
@@ -108,13 +113,13 @@
             href="https://greenhell.de/search/?qs=<%= encodeURIComponent((item.artist ? item.artist + ' ' : '') + item.title).replace(/%20/g, '+') %>"
             target="_blank"
             rel="noopener"
-          >Bei Green Hell Records suchen ↗</a>
+          ><%= __('shop_greenhell') %> ↗</a>
           <a
             class="gh-link gh-link--detail shop-link shop-link--amazon"
             href="https://www.amazon.de/s?k=<%= encodeURIComponent((item.artist ? item.artist + ' ' : '') + item.title) %>"
             target="_blank"
             rel="noopener"
-          >Bei Amazon suchen ↗</a>
+          ><%= __('shop_amazon') %> ↗</a>
         <% } %>
       </div>
 
@@ -134,34 +139,34 @@
         <form class="form-card" method="post" action="<%= base %>/items/<%= item.id %>">
 
           <div class="form-group">
-            <label for="title">Titel</label>
+            <label for="title"><%= __('label_title') %></label>
             <input id="title" name="title" type="text" value="<%= item.title %>" required />
           </div>
 
           <div class="form-group">
-            <label for="artist">Künstler</label>
+            <label for="artist"><%= __('label_artist') %></label>
             <input id="artist" name="artist" type="text" value="<%= item.artist || '' %>" />
           </div>
 
           <input type="hidden" name="media_type" value="vinyl" />
           <div class="form-group">
-            <label for="year">Jahr</label>
+            <label for="year"><%= __('label_year') %></label>
             <input id="year" name="year" type="text" maxlength="4" value="<%= item.year || '' %>" />
           </div>
 
           <div class="form-group form-group--inline">
             <label class="checkbox-label">
               <input type="checkbox" name="owned"    <%= item.owned    ? 'checked' : '' %> />
-              Besitze ich
+              <%= __('label_owned') %>
             </label>
             <label class="checkbox-label">
               <input type="checkbox" name="wishlist" <%= item.wishlist ? 'checked' : '' %> />
-              Wunschliste
+              <%= __('label_wishlist') %>
             </label>
           </div>
 
           <div class="form-group">
-            <label>Bewertung</label>
+            <label><%= __('label_rating') %></label>
             <div class="star-input" data-field="rating">
               <% for (let i = 1; i <= 5; i++) { %>
                 <span class="star <%= item.rating >= i ? 'active' : '' %>" data-value="<%= i %>">&#9733;</span>
@@ -171,44 +176,44 @@
           </div>
 
           <div class="form-group">
-            <label for="genre">Genre</label>
-            <input id="genre" name="genre" type="text" placeholder="z. B. Punk, Rock, Folk …" value="<%= item.genre || '' %>" />
+            <label for="genre"><%= __('label_genre') %></label>
+            <input id="genre" name="genre" type="text" placeholder="<%= __('placeholder_genre') %>" value="<%= item.genre || '' %>" />
           </div>
           <!-- cover_url wird über das URL-Eingabefeld im Cover-Bereich gesteuert -->
           <input type="hidden" name="cover_url" id="cover-url-hidden" value="<%= item.cover_url || '' %>" />
           <div class="form-group">
-            <label for="notes">Notizen</label>
-            <textarea id="notes" name="notes" rows="4" placeholder="Eigene Notizen…"><%= item.notes || '' %></textarea>
+            <label for="notes"><%= __('label_notes') %></label>
+            <textarea id="notes" name="notes" rows="4" placeholder="<%= __('placeholder_notes') %>"><%= item.notes || '' %></textarea>
           </div>
 
           <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Speichern</button>
+            <button type="submit" class="btn btn-primary"><%= __('save_btn') %></button>
           </div>
         </form>
         <!-- ── Metadaten nachladen ───────────────────────────────────────── -->
         <a
           href="<%= base %>/items/<%= item.id %>/refresh"
           class="btn btn-secondary btn-refresh"
-        >🔄 Metadaten nachladen</a>
+        >🔄 <%= __('refresh_metadata_btn') %></a>
         <!-- ── Delete ───────────────────────────────────────────────────── -->
         <form
           method="post"
           action="<%= base %>/items/<%= item.id %>/delete"
           class="delete-form"
-          onsubmit="return confirm('Diesen Eintrag wirklich löschen?')"
+          onsubmit="return confirm(__('confirm_delete_single'))"
         >
-          <button type="submit" class="btn btn-danger">Löschen</button>
+          <button type="submit" class="btn btn-danger"><%= __('delete_btn') %></button>
         </form>
 
         <p class="detail-created">
-          Hinzugefügt: <%= new Date(item.created_at).toLocaleDateString('de-DE') %>
+          <%= __('added_on') %>: <%= new Date(item.created_at).toLocaleDateString(lang === 'de' ? 'de-DE' : 'en-US') %>
         </p>
       </div>
     </div>
   </main>
 
   <footer class="site-footer">
-    <small>VinylVault &mdash; persönliche Vinylsammlung</small>
+    <small><%= __('footer') %></small>
   </footer>
   <script>
     const BASE = '<%= base %>';
@@ -226,11 +231,11 @@
       if (suggestLoaded) {
         const visible = suggestionsEl.style.display !== 'none';
         suggestionsEl.style.display = visible ? 'none' : '';
-        suggestBtn.textContent = visible ? '🎨 Cover-Vorschläge' : '🎨 Vorschläge ausblenden';
+        suggestBtn.textContent = visible ? '🎨 ' + __('cover_suggestions_btn') : '🎨 ' + __('hide_suggestions_btn');
         return;
       }
       suggestBtn.disabled     = true;
-      suggestBtn.textContent  = '⏳ Lade …';
+      suggestBtn.textContent  = '⏳ ' + __('loading');
       try {
         const params = new URLSearchParams({ q: suggestBtn.dataset.title });
         if (suggestBtn.dataset.artist) params.set('artist', suggestBtn.dataset.artist);
@@ -238,7 +243,7 @@
         const sugs = await res.json();
         const withCover = sugs.filter(s => s.cover_url || s.rg_cover_url);
         if (!withCover.length) {
-          suggestTrack.innerHTML = '<span class="cover-sug-none">Keine Cover-Vorschläge gefunden.</span>';
+          suggestTrack.innerHTML = '<span class="cover-sug-none">' + __('no_cover_suggestions') + '</span>';
         } else {
           suggestTrack.innerHTML = withCover.map(s => {
             const primary  = s.cover_url || s.rg_cover_url;
@@ -257,9 +262,9 @@
         }
         suggestLoaded = true;
         suggestionsEl.style.display = '';
-        suggestBtn.textContent = '🎨 Vorschläge ausblenden';
+        suggestBtn.textContent = '🎨 ' + __('hide_suggestions_btn');
       } catch {
-        suggestBtn.textContent = '⚠ Fehler';
+        suggestBtn.textContent = '⚠ ' + __('error');
       }
       suggestBtn.disabled = false;
     });
@@ -286,16 +291,16 @@
       if (!url) return;
       const img = new Image();
       img.onload = () => {
-        previewWrap.innerHTML = `<img id="cover-preview-img" src="${url}" alt="Cover" />`;
+        previewWrap.innerHTML = `<img id="cover-preview-img" src="${escHtml(url)}" alt="Cover" />`;
         urlHidden.value = url;
-        applyBtn.textContent = '✔ Geladen';
+        applyBtn.textContent = '✔ ' + __('cover_loaded');
         applyBtn.style.color = 'var(--color-success, #4caf50)';
-        setTimeout(() => { applyBtn.textContent = 'Laden'; applyBtn.style.color = ''; }, 2000);
+        setTimeout(() => { applyBtn.textContent = __('load_btn'); applyBtn.style.color = ''; }, 2000);
       };
       img.onerror = () => {
-        applyBtn.textContent = '✘ Nicht ladbar';
+        applyBtn.textContent = '✘ ' + __('cover_not_loadable');
         applyBtn.style.color = 'var(--color-danger)';
-        setTimeout(() => { applyBtn.textContent = 'Laden'; applyBtn.style.color = ''; }, 2500);
+        setTimeout(() => { applyBtn.textContent = __('load_btn'); applyBtn.style.color = ''; }, 2500);
       };
       img.src = url;
     }

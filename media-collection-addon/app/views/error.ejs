@@ -5,13 +5,14 @@
    */
 %>
 <!DOCTYPE html>
-<html lang="de">
+<html lang="<%= lang %>">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fehler – VinylVault</title>
+  <title><%= __('error_page_title') %> – VinylVault</title>
   <link rel="stylesheet" href="<%= base %>/public/style.css?v=<%= assetVersion %>" />
   <link rel="stylesheet" href="<%= base %>/public/themes.css?v=<%= assetVersion %>" />
+  <%- include('partials/head-i18n') %>
 </head>
 <body>
   <header class="site-header">
@@ -21,20 +22,20 @@
     </a>
     <div class="nav-wrap">
       <nav class="nav-primary">
-        <a class="btn btn-ghost nav-link-collection" href="<%= base %>/"><span class="btn-icon"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" /><circle cx="12" cy="12" r="2" fill="currentColor" /></svg></span><span class="btn-label">Sammlung</span></a>
-        <a href="<%= base %>/items/wishlist-add" class="btn btn-secondary"><span class="btn-icon">♥</span><span class="btn-label">Wunschliste</span></a>
-        <a href="<%= base %>/items/add" class="btn btn-primary"><span class="btn-icon">+</span><span class="btn-label">Hinzufügen</span></a>
+        <a class="btn btn-ghost nav-link-collection" href="<%= base %>/"><span class="btn-icon"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" /><circle cx="12" cy="12" r="2" fill="currentColor" /></svg></span><span class="btn-label"><%= __('nav_collection') %></span></a>
+        <a href="<%= base %>/items/wishlist-add" class="btn btn-secondary"><span class="btn-icon">♥</span><span class="btn-label"><%= __('nav_wishlist') %></span></a>
+        <a href="<%= base %>/items/add" class="btn btn-primary"><span class="btn-icon">+</span><span class="btn-label"><%= __('nav_add') %></span></a>
         <details class="nav-more nav-main">
           <summary class="nav-more-btn" aria-label="Menue">Menu</summary>
           <div class="nav-more-panel">
             <details class="nav-more-sub">
               <summary class="nav-more-sub-btn">CSV</summary>
               <div class="nav-more-sub-panel">
-                <a href="<%= base %>/csv">CSV-Import</a>
-                <a href="<%= base %>/csv/export">CSV-Export</a>
+                <a href="<%= base %>/csv"><%= __('nav_csv_import') %></a>
+                <a href="<%= base %>/csv/export"><%= __('nav_csv_export') %></a>
               </div>
             </details>
-            <a href="<%= base %>/items/bulk-refresh">Massenanalyse</a>
+            <a href="<%= base %>/items/bulk-refresh"><%= __('nav_bulk_analysis') %></a>
             <details class="nav-more-sub">
               <summary class="nav-more-sub-btn">Theme</summary>
               <div class="nav-more-sub-panel nav-theme-panel">
@@ -55,6 +56,10 @@
                 <a href="javascript:void(0)" class="theme-option" data-theme="vinyl">Vinyl</a>
               </div>
             </details>
+            <div class="nav-lang-group">
+              <a href="javascript:void(0)" onclick="setLang('de')" class="lang-option<%= lang === 'de' ? ' active' : '' %>">DE</a>
+              <a href="javascript:void(0)" onclick="setLang('en')" class="lang-option<%= lang === 'en' ? ' active' : '' %>">EN</a>
+            </div>
           </div>
         </details>
       </nav>
@@ -62,13 +67,13 @@
   </header>
 
   <main class="container">
-    <h1>Oops!</h1>
-    <p><%= message || 'Ein unbekannter Fehler ist aufgetreten.' %></p>
-    <a href="<%= base %>/" class="btn btn-primary">Zur Startseite</a>
+    <h1><%= __('oops') %></h1>
+    <p><%= message || __('unknown_error') %></p>
+    <a href="<%= base %>/" class="btn btn-primary"><%= __('to_homepage') %></a>
   </main>
 
   <footer class="site-footer">
-    <small>VinylVault &mdash; persönliche Vinylsammlung</small>
+    <small><%= __('footer') %></small>
   </footer>
   <script src="<%= base %>/public/theme-selector.js?v=<%= assetVersion %>"></script>
 </body>

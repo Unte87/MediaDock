@@ -5,12 +5,14 @@ const morgan = require('morgan');
 const addonConfig = require(path.join(__dirname, 'package.json'));
 
 const db = require('./database');
+const i18n = require('./i18n');
 const indexRouter = require('./routes/index');
 const itemsRouter = require('./routes/items');
 const apiRouter   = require('./routes/api');
 const csvRouter   = require('./routes/csv');
 
 const app = express();
+app.disable('x-powered-by');
 const PORT = process.env.PORT || 8099;
 const buildStamp = process.env.ASSET_VERSION || Date.now().toString();
 
@@ -25,6 +27,9 @@ app.locals.assetVersion = `${addonConfig.version || 'dev'}-${buildStamp}`;
 app.use(morgan('combined'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+// i18n – detect language from cookie / Accept-Language header
+app.use(i18n.middleware);
 
 // Home Assistant ingress sends the base path in the X-Ingress-Path header.
 // Inject it into res.locals so every template and redirect can use it.
@@ -53,13 +58,13 @@ app.use('/csv', csvRouter);
 
 // Fallback 404
 app.use((req, res) => {
-  res.status(404).render('error', { message: '404 – Seite nicht gefunden', base: res.locals.base });
+  res.status(404).render('error', { message: res.locals.__('error_404'), base: res.locals.base });
 });
 
 // Global error handler
 app.use((err, req, res, _next) => {
   console.error(err);
-  res.status(500).render('error', { message: err.message || 'Interner Serverfehler', base: res.locals.base });
+  res.status(500).render('error', { message: res.locals.__('error_500'), base: res.locals.base });
 });
 
 // ── Startup ───────────────────────────────────────────────────────────────────

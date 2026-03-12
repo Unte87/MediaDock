@@ -8,13 +8,14 @@
    */
 %>
 <!DOCTYPE html>
-<html lang="de">
+<html lang="<%= lang %>">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hinzufügen – VinylVault</title>
+  <title><%= __('add_page_title') %> – VinylVault</title>
   <link rel="stylesheet" href="<%= base %>/public/style.css?v=<%= assetVersion %>" />
   <link rel="stylesheet" href="<%= base %>/public/themes.css?v=<%= assetVersion %>" />
+  <%- include('partials/head-i18n') %>
 </head>
 <body>
   <header class="site-header">
@@ -24,20 +25,20 @@
     </a>
     <div class="nav-wrap">
       <nav class="nav-primary">
-        <a class="btn btn-ghost nav-link-collection" href="<%= base %>/"><span class="btn-icon"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" /><circle cx="12" cy="12" r="2" fill="currentColor" /></svg></span><span class="btn-label">Sammlung</span></a>
-        <a href="<%= base %>/items/wishlist-add" class="btn btn-secondary"><span class="btn-icon">♥</span><span class="btn-label">Wunschliste</span></a>
-        <a href="<%= base %>/items/add" class="btn btn-primary"><span class="btn-icon">+</span><span class="btn-label">Hinzufügen</span></a>
+        <a class="btn btn-ghost nav-link-collection" href="<%= base %>/"><span class="btn-icon"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" /><circle cx="12" cy="12" r="2" fill="currentColor" /></svg></span><span class="btn-label"><%= __('nav_collection') %></span></a>
+        <a href="<%= base %>/items/wishlist-add" class="btn btn-secondary"><span class="btn-icon">♥</span><span class="btn-label"><%= __('nav_wishlist') %></span></a>
+        <a href="<%= base %>/items/add" class="btn btn-primary"><span class="btn-icon">+</span><span class="btn-label"><%= __('nav_add') %></span></a>
         <details class="nav-more nav-main">
           <summary class="nav-more-btn" aria-label="Menue">Menu</summary>
           <div class="nav-more-panel">
             <details class="nav-more-sub">
               <summary class="nav-more-sub-btn">CSV</summary>
               <div class="nav-more-sub-panel">
-                <a href="<%= base %>/csv">CSV-Import</a>
-                <a href="<%= base %>/csv/export">CSV-Export</a>
+                <a href="<%= base %>/csv"><%= __('nav_csv_import') %></a>
+                <a href="<%= base %>/csv/export"><%= __('nav_csv_export') %></a>
               </div>
             </details>
-            <a href="<%= base %>/items/bulk-refresh">Massenanalyse</a>
+            <a href="<%= base %>/items/bulk-refresh"><%= __('nav_bulk_analysis') %></a>
             <details class="nav-more-sub">
               <summary class="nav-more-sub-btn">Theme</summary>
               <div class="nav-more-sub-panel nav-theme-panel">
@@ -58,6 +59,10 @@
                 <a href="javascript:void(0)" class="theme-option" data-theme="vinyl">Vinyl</a>
               </div>
             </details>
+            <div class="nav-lang-group">
+              <a href="javascript:void(0)" onclick="setLang('de')" class="lang-option<%= lang === 'de' ? ' active' : '' %>">DE</a>
+              <a href="javascript:void(0)" onclick="setLang('en')" class="lang-option<%= lang === 'en' ? ' active' : '' %>">EN</a>
+            </div>
           </div>
         </details>
       </nav>
@@ -65,7 +70,7 @@
   </header>
 
   <main class="container">
-    <h1 class="page-title">Neues Medium hinzufügen</h1>
+    <h1 class="page-title"><%= __('add_new_item') %></h1>
 
     <% if (error) { %>
       <div class="alert alert-error"><%= error %></div>
@@ -73,17 +78,17 @@
 
     <!-- ── Tabs ──────────────────────────────────────────────────────────── -->
     <div class="tabs">
-      <button class="tab-btn active" data-tab="release">🔍 Release suchen</button>
-      <button class="tab-btn"        data-tab="artist"> 🎤 Künstler suchen</button>
-      <button class="tab-btn"        data-tab="manual"> ✏️ Manuell</button>
+      <button class="tab-btn active" data-tab="release">🔍 <%= __('tab_search_release') %></button>
+      <button class="tab-btn"        data-tab="artist"> 🎤 <%= __('tab_search_artist') %></button>
+      <button class="tab-btn"        data-tab="manual"> ✏️ <%= __('tab_manual') %></button>
     </div>
 
     <!-- ── Tab: Release-Suche ─────────────────────────────────────────────── -->
     <div id="tab-release" class="tab-panel active">
       <div class="search-bar">
-        <input id="rel-title"  type="text" placeholder="Titel  (z. B. Greatest Hits)" />
-        <input id="rel-artist" type="text" placeholder="Künstler  (z. B. Foo Fighters)" />
-        <button id="rel-search-btn" class="btn btn-primary">Suchen</button>
+        <input id="rel-title"  type="text" placeholder="<%= __('placeholder_title') %>" />
+        <input id="rel-artist" type="text" placeholder="<%= __('placeholder_artist') %>" />
+        <button id="rel-search-btn" class="btn btn-primary"><%= __('search_btn') %></button>
       </div>
       <div id="rel-results" class="search-results"></div>
     </div>
@@ -91,8 +96,8 @@
     <!-- ── Tab: Künstler-Suche ─────────────────────────────────────────────── -->
     <div id="tab-artist" class="tab-panel">
       <div class="search-bar">
-        <input id="art-query" type="text" placeholder="Künstlername  (z. B. Foo Fighters)" />
-        <button id="art-search-btn" class="btn btn-primary">Suchen</button>
+        <input id="art-query" type="text" placeholder="<%= __('placeholder_artist_name') %>" />
+        <button id="art-search-btn" class="btn btn-primary"><%= __('search_btn') %></button>
       </div>
       <div id="art-results"  class="search-results"></div>
       <div id="disc-results" class="search-results" style="display:none"></div>
@@ -102,32 +107,32 @@
     <div id="tab-manual" class="tab-panel">
       <form class="form-card" method="post" action="<%= base %>/items/add">
         <div class="form-group">
-          <label for="m-title">Titel <span class="required">*</span></label>
-          <input id="m-title" name="title" type="text" required placeholder="Titel eingeben" autofocus />
+          <label for="m-title"><%= __('label_title') %> <span class="required">*</span></label>
+          <input id="m-title" name="title" type="text" required placeholder="<%= __('placeholder_enter_title') %>" autofocus />
         </div>
         <div class="form-group">
-          <label for="m-artist">Künstler</label>
-          <input id="m-artist" name="artist" type="text" placeholder="Künstler / Interpret" />
+          <label for="m-artist"><%= __('label_artist') %></label>
+          <input id="m-artist" name="artist" type="text" placeholder="<%= __('placeholder_artist_interpret') %>" />
         </div>
         <div class="form-group">
-          <label for="m-genre">Genre</label>
-          <input id="m-genre" name="genre" type="text" placeholder="z. B. Punk, Rock, Folk …" />
+          <label for="m-genre"><%= __('label_genre') %></label>
+          <input id="m-genre" name="genre" type="text" placeholder="<%= __('placeholder_genre') %>" />
         </div>
         <input type="hidden" name="media_type" value="vinyl" />
         <div class="form-group form-group--inline">
-          <label class="checkbox-label"><input type="checkbox" name="owned"    /> Besitze ich</label>
-          <label class="checkbox-label"><input type="checkbox" name="wishlist" /> Wunschliste</label>
+          <label class="checkbox-label"><input type="checkbox" name="owned"    /> <%= __('label_owned') %></label>
+          <label class="checkbox-label"><input type="checkbox" name="wishlist" /> <%= __('label_wishlist') %></label>
         </div>
         <div class="form-actions">
-          <a href="<%= base %>/" class="btn btn-ghost">Abbrechen</a>
-          <button type="submit" class="btn btn-primary">Speichern</button>
+          <a href="<%= base %>/" class="btn btn-ghost"><%= __('cancel_btn') %></a>
+          <button type="submit" class="btn btn-primary"><%= __('save_btn') %></button>
         </div>
       </form>
     </div>
 
     <!-- ── Bestätigungsformular (wird per JS ausgefüllt) ─────────────────── -->
     <div id="confirm-panel" class="confirm-panel" style="display:none">
-      <h2 class="confirm-title">Ausgewählt</h2>
+      <h2 class="confirm-title"><%= __('selected') %></h2>
       <div class="confirm-preview">
         <img id="confirm-cover" src="" alt="" />
         <div>
@@ -145,11 +150,11 @@
 
         <input type="hidden" name="media_type" value="vinyl" />
         <div class="form-group form-group--inline">
-          <label class="checkbox-label"><input type="checkbox" name="owned"    /> Besitze ich</label>
-          <label class="checkbox-label"><input type="checkbox" name="wishlist" /> Wunschliste</label>
+          <label class="checkbox-label"><input type="checkbox" name="owned"    /> <%= __('label_owned') %></label>
+          <label class="checkbox-label"><input type="checkbox" name="wishlist" /> <%= __('label_wishlist') %></label>
         </div>
         <div class="form-group">
-          <label>Bewertung</label>
+          <label><%= __('label_rating') %></label>
           <div class="star-input" id="cf-star-input" data-field="cf-rating">
             <% for (let i = 1; i <= 5; i++) { %>
               <span class="star" data-value="<%= i %>">★</span>
@@ -158,19 +163,19 @@
           <input type="hidden" name="rating" id="cf-rating" value="0" />
         </div>
         <div class="form-group">
-          <label for="cf-genre">Genre</label>
-          <input id="cf-genre" name="genre" type="text" placeholder="z. B. Punk, Rock, Folk …" />
+          <label for="cf-genre"><%= __('label_genre') %></label>
+          <input id="cf-genre" name="genre" type="text" placeholder="<%= __('placeholder_genre') %>" />
         </div>
         <div class="form-actions">
-          <button type="button" class="btn btn-ghost" onclick="closeConfirm()">Abbrechen</button>
-          <button type="submit" class="btn btn-primary">Speichern</button>
+          <button type="button" class="btn btn-ghost" onclick="closeConfirm()"><%= __('cancel_btn') %></button>
+          <button type="submit" class="btn btn-primary"><%= __('save_btn') %></button>
         </div>
       </form>
     </div>
   </main>
 
   <footer class="site-footer">
-    <small>VinylVault &mdash; persönliche Vinylsammlung</small>
+    <small><%= __('footer') %></small>
   </footer>
 
   <script>
@@ -196,7 +201,7 @@
     function escHtml(s) {
       return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
-    function setLoading(el) { el.innerHTML = '<p class="search-loading">Suche läuft…</p>'; }
+    function setLoading(el) { el.innerHTML = '<p class="search-loading">' + __('searching') + '</p>'; }
     function setError(el, msg) { el.innerHTML = `<p class="search-error">${msg}</p>`; }
 
     // ── Ausgewähltes Release ins Bestätigungsformular übertragen ───────────
@@ -225,7 +230,13 @@
     // ── Release-Karte als HTML ───────────────────────────────────────────────
     function releaseCard(r) {
       return `
-        <div class="result-card" onclick='selectRelease(${JSON.stringify(r)})'>
+        <div class="result-card"
+             data-title="${escHtml(r.title || '')}"
+             data-artist="${escHtml(r.artist || '')}"
+             data-year="${escHtml(r.year || '')}"
+             data-cover="${escHtml(r.cover_url || '')}"
+             data-mbid="${escHtml(r.mbid || '')}"
+             onclick="selectReleaseFromCard(this)">
           <div class="result-cover">${coverImg(r.cover_url, r.title)}</div>
           <div class="result-info">
             <p class="result-title">${escHtml(r.title)}</p>
@@ -234,6 +245,15 @@
           </div>
           <span class="result-add-icon">＋</span>
         </div>`;
+    }
+    function selectReleaseFromCard(el) {
+      selectRelease({
+        title:     el.dataset.title  || '',
+        artist:    el.dataset.artist || '',
+        year:      el.dataset.year   || '',
+        cover_url: el.dataset.cover  || '',
+        mbid:      el.dataset.mbid   || '',
+      });
     }
 
     // ── Tab 1: Release suchen ────────────────────────────────────────────────
@@ -248,9 +268,9 @@
         if (artist) params.set('artist', artist);
         const res  = await fetch(`${BASE}/api/search?${params}`);
         const data = await res.json();
-        if (!data.length) { el.innerHTML = '<p class="search-empty">Keine Treffer gefunden.</p>'; return; }
+        if (!data.length) { el.innerHTML = '<p class="search-empty">' + __('no_results_found') + '</p>'; return; }
         el.innerHTML = data.map(releaseCard).join('');
-      } catch { setError(el, 'Suche fehlgeschlagen.'); }
+      } catch { setError(el, __('search_failed')); }
     }
     document.getElementById('rel-search-btn').addEventListener('click', searchReleases);
     document.getElementById('rel-title').addEventListener('keydown',  e => e.key==='Enter' && searchReleases());
@@ -266,14 +286,14 @@
       try {
         const res  = await fetch(`${BASE}/api/artists?q=${encodeURIComponent(q)}`);
         const data = await res.json();
-        if (!data.length) { el.innerHTML = '<p class="search-empty">Keine Künstler gefunden.</p>'; return; }
+        if (!data.length) { el.innerHTML = '<p class="search-empty">' + __('no_artists_found') + '</p>'; return; }
         el.innerHTML = data.map(a => `
-          <div class="artist-card" onclick="loadDiscography('${a.mbid}','${escHtml(a.name)}')">
+          <div class="artist-card" onclick="loadDiscography('${escHtml(a.mbid)}','${escHtml(a.name).replace(/'/g, '&#39;')}')">
             <span class="artist-name">${escHtml(a.name)}</span>
             ${a.disambiguation ? `<span class="artist-dis">${escHtml(a.disambiguation)}</span>` : ''}
             ${a.country         ? `<span class="artist-country">${escHtml(a.country)}</span>` : ''}
           </div>`).join('');
-      } catch { setError(el, 'Suche fehlgeschlagen.'); }
+      } catch { setError(el, __('search_failed')); }
     }
     document.getElementById('art-search-btn').addEventListener('click', searchArtists);
     document.getElementById('art-query').addEventListener('keydown', e => e.key==='Enter' && searchArtists());
@@ -282,14 +302,14 @@
     async function loadDiscography(mbid, name) {
       const el = document.getElementById('disc-results');
       el.style.display = '';
-      el.innerHTML = `<p class="search-loading">Lade Diskografie von ${escHtml(name)}…</p>`;
+      el.innerHTML = `<p class="search-loading">${__('loading_discography').replace('{name}', escHtml(name))}</p>`;
       el.scrollIntoView({ behavior: 'smooth' });
       try {
         const res  = await fetch(`${BASE}/api/artists/${mbid}/releases`);
         const data = await res.json();
-        if (!data.length) { el.innerHTML = '<p class="search-empty">Keine Releases gefunden.</p>'; return; }
-        el.innerHTML = `<h3 class="disc-heading">Diskografie: ${escHtml(name)}</h3>` + data.map(releaseCard).join('');
-      } catch { setError(el, 'Diskografie konnte nicht geladen werden.'); }
+        if (!data.length) { el.innerHTML = '<p class="search-empty">' + __('no_releases_found') + '</p>'; return; }
+        el.innerHTML = `<h3 class="disc-heading">${__('discography_of').replace('{name}', escHtml(name))}</h3>` + data.map(releaseCard).join('');
+      } catch { setError(el, __('discography_failed')); }
     }
 
     // ── Sterne-Rating ────────────────────────────────────────────────────────

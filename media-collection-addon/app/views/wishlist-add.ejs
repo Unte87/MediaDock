@@ -6,13 +6,14 @@
    */
 %>
 <!DOCTYPE html>
-<html lang="de">
+<html lang="<%= lang %>">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Wunschliste erweitern – VinylVault</title>
+  <title><%= __('wishlist_expand_title') %> – VinylVault</title>
   <link rel="stylesheet" href="<%= base %>/public/style.css?v=<%= assetVersion %>" />
   <link rel="stylesheet" href="<%= base %>/public/themes.css?v=<%= assetVersion %>" />
+  <%- include('partials/head-i18n') %>
   <style>
     .wl-grid {
       display: grid;
@@ -83,20 +84,20 @@
     </a>
     <div class="nav-wrap">
       <nav class="nav-primary">
-        <a class="btn btn-ghost nav-link-collection" href="<%= base %>/"><span class="btn-icon"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" /><circle cx="12" cy="12" r="2" fill="currentColor" /></svg></span><span class="btn-label">Sammlung</span></a>
-        <a href="<%= base %>/items/wishlist-add" class="btn btn-secondary"><span class="btn-icon">♥</span><span class="btn-label">Wunschliste erweitern</span></a>
-        <a href="<%= base %>/items/add" class="btn btn-primary"><span class="btn-icon">+</span><span class="btn-label">Hinzufügen</span></a>
+        <a class="btn btn-ghost nav-link-collection" href="<%= base %>/"><span class="btn-icon"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" /><circle cx="12" cy="12" r="2" fill="currentColor" /></svg></span><span class="btn-label"><%= __('nav_collection') %></span></a>
+        <a href="<%= base %>/items/wishlist-add" class="btn btn-secondary"><span class="btn-icon">♥</span><span class="btn-label"><%= __('nav_wishlist_expand') %></span></a>
+        <a href="<%= base %>/items/add" class="btn btn-primary"><span class="btn-icon">+</span><span class="btn-label"><%= __('nav_add') %></span></a>
         <details class="nav-more nav-main">
           <summary class="nav-more-btn" aria-label="Menue">Menu</summary>
           <div class="nav-more-panel">
             <details class="nav-more-sub">
               <summary class="nav-more-sub-btn">CSV</summary>
               <div class="nav-more-sub-panel">
-                <a href="<%= base %>/csv">CSV-Import</a>
-                <a href="<%= base %>/csv/export">CSV-Export</a>
+                <a href="<%= base %>/csv"><%= __('nav_csv_import') %></a>
+                <a href="<%= base %>/csv/export"><%= __('nav_csv_export') %></a>
               </div>
             </details>
-            <a href="<%= base %>/items/bulk-refresh">Massenanalyse</a>
+            <a href="<%= base %>/items/bulk-refresh"><%= __('nav_bulk_analysis') %></a>
             <details class="nav-more-sub">
               <summary class="nav-more-sub-btn">Theme</summary>
               <div class="nav-more-sub-panel nav-theme-panel">
@@ -117,6 +118,10 @@
                 <a href="javascript:void(0)" class="theme-option" data-theme="vinyl">Vinyl</a>
               </div>
             </details>
+            <div class="nav-lang-group">
+              <a href="javascript:void(0)" onclick="setLang('de')" class="lang-option<%= lang === 'de' ? ' active' : '' %>">DE</a>
+              <a href="javascript:void(0)" onclick="setLang('en')" class="lang-option<%= lang === 'en' ? ' active' : '' %>">EN</a>
+            </div>
           </div>
         </details>
       </nav>
@@ -124,27 +129,27 @@
   </header>
 
   <main class="container">
-    <a href="<%= base %>/" class="back-link">&larr; Zur Sammlung</a>
-    <h1 class="page-title">Wunschliste erweitern</h1>
+    <a href="<%= base %>/" class="back-link">&larr; <%= __('back_to_collection') %></a>
+    <h1 class="page-title"><%= __('wishlist_expand_title') %></h1>
     <p style="color:var(--color-text-muted,#888);margin-top:-.5rem;margin-bottom:1.25rem;">
-      Künstler suchen → Alben auswählen → zur Wunschliste hinzufügen.<br>
-      Bereits vorhandene oder gewünschte Einträge werden nicht angezeigt.
+      <%= __('wishlist_expand_desc') %><br>
+      <%= __('wishlist_expand_hint') %>
     </p>
 
     <!-- Künstler-Suche -->
     <div class="search-bar">
-      <input id="art-query" type="text" placeholder="Künstlername  (z. B. Foo Fighters)" />
-      <button id="art-search-btn" class="btn btn-primary">Suchen</button>
+      <input id="art-query" type="text" placeholder="<%= __('placeholder_artist_name') %>" />
+      <button id="art-search-btn" class="btn btn-primary"><%= __('search_btn') %></button>
     </div>
     <div id="art-results" class="search-results" style="margin-top:.75rem"></div>
 
     <!-- Diskografie -->
     <div id="disc-section" style="display:none; margin-top:1rem;">
       <div class="wl-sticky">
-        <span class="wl-count" id="wl-count">Keine Alben ausgewählt</span>
-        <button id="wl-select-all"   class="btn btn-ghost btn-sm">Alle wählen</button>
-        <button id="wl-deselect-all" class="btn btn-ghost btn-sm">Alle abwählen</button>
-        <button id="wl-add-btn"      class="btn btn-primary"      disabled>♥ Zur Wunschliste</button>
+        <span class="wl-count" id="wl-count"><%= __('no_albums_selected') %></span>
+        <button id="wl-select-all"   class="btn btn-ghost btn-sm"><%= __('select_all') %></button>
+        <button id="wl-deselect-all" class="btn btn-ghost btn-sm"><%= __('deselect_all') %></button>
+        <button id="wl-add-btn"      class="btn btn-primary"      disabled>♥ <%= __('add_to_wishlist_btn') %></button>
       </div>
       <div id="disc-results"></div>
     </div>
@@ -153,7 +158,7 @@
   <div class="wl-toast" id="wl-toast"></div>
 
   <footer class="site-footer">
-    <small>VinylVault &mdash; persönliche Vinylsammlung</small>
+    <small><%= __('footer') %></small>
   </footer>
 
   <script>
@@ -200,7 +205,7 @@
     function updateToolbar() {
       const n = selected.size;
       document.getElementById('wl-count').textContent =
-        n === 0 ? 'Keine Alben ausgewählt' : `${n} Album${n === 1 ? '' : 's'} ausgewählt`;
+        n === 0 ? __('no_albums_selected') : n === 1 ? __('one_album_selected') : __('n_albums_selected').replace('{n}', n);
       document.getElementById('wl-add-btn').disabled = (n === 0);
     }
 
@@ -249,7 +254,7 @@
       const types = [...new Set([...order, ...Object.keys(groups)])].filter(t => groups[t]?.length);
 
       if (!types.length) {
-        discEl.innerHTML = '<p class="search-empty">Alle Releases sind bereits in deiner Sammlung oder Wunschliste.</p>';
+        discEl.innerHTML = '<p class="search-empty">' + __('all_releases_known') + '</p>';
         document.getElementById('disc-section').style.display = '';
         return;
       }
@@ -287,7 +292,7 @@
     document.getElementById('wl-add-btn').addEventListener('click', async () => {
       const btn = document.getElementById('wl-add-btn');
       btn.disabled = true;
-      btn.textContent = '⏳ Speichere…';
+      btn.textContent = '⏳ ' + __('saving');
       const items = [...selected.values()];
       try {
         const res  = await fetch(`${BASE}/items/wishlist-add`, {
@@ -300,8 +305,8 @@
           window.location.href = `${BASE}/`;
           return;
         }
-      } catch { showToast('Fehler beim Speichern.'); }
-      btn.textContent = '♥ Zur Wunschliste';
+      } catch { showToast(__('save_error')); }
+      btn.textContent = '♥ ' + __('add_to_wishlist_btn');
       updateToolbar();
     });
 
@@ -318,20 +323,20 @@
       const q = document.getElementById('art-query').value.trim();
       if (!q) return;
       const el = document.getElementById('art-results');
-      el.innerHTML = '<p class="search-loading">Suche läuft…</p>';
+      el.innerHTML = '<p class="search-loading">' + __('searching') + '</p>';
       document.getElementById('disc-section').style.display = 'none';
       selected.clear(); allCards = []; updateToolbar();
       try {
         const res  = await fetch(`${BASE}/api/artists?q=${encodeURIComponent(q)}`);
         const data = await res.json();
-        if (!data.length) { el.innerHTML = '<p class="search-empty">Keine Künstler gefunden.</p>'; return; }
+        if (!data.length) { el.innerHTML = '<p class="search-empty">' + __('no_artists_found') + '</p>'; return; }
         el.innerHTML = data.map(a => `
           <div class="artist-card" onclick="loadDisc('${escHtml(a.mbid)}','${escHtml(a.name).replace(/'/g, '&#39;')}')">
             <span class="artist-name">${escHtml(a.name)}</span>
             ${a.disambiguation ? `<span class="artist-dis">${escHtml(a.disambiguation)}</span>` : ''}
             ${a.country        ? `<span class="artist-country">${escHtml(a.country)}</span>`        : ''}
           </div>`).join('');
-      } catch { el.innerHTML = '<p class="search-error">Suche fehlgeschlagen.</p>'; }
+      } catch { el.innerHTML = '<p class="search-error">' + __('search_failed') + '</p>'; }
     }
 
     async function loadDisc(mbid, name) {
@@ -339,13 +344,13 @@
       selected.clear(); allCards = []; updateToolbar();
       const el = document.getElementById('disc-results');
       document.getElementById('disc-section').style.display = '';
-      el.innerHTML = `<p class="search-loading">Lade Diskografie von ${escHtml(name)}…</p>`;
+      el.innerHTML = `<p class="search-loading">${__('loading_discography').replace('{name}', escHtml(name))}</p>`;
       document.getElementById('disc-section').scrollIntoView({ behavior: 'smooth' });
       try {
         const res  = await fetch(`${BASE}/api/artists/${mbid}/releases`);
         const data = await res.json();
         renderDiscography(data);
-      } catch { el.innerHTML = '<p class="search-error">Diskografie konnte nicht geladen werden.</p>'; }
+      } catch { el.innerHTML = '<p class="search-error">' + __('discography_failed') + '</p>'; }
     }
 
     document.getElementById('art-search-btn').addEventListener('click', searchArtists);
